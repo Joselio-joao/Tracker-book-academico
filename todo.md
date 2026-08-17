@@ -15,8 +15,8 @@
 
 - [x] Corrigir o cache do service worker para guardar todos os ficheiros da aplicação após a primeira abertura online.
 - [x] Validar o cache do service worker e a persistência dos registos no navegador.
-- [ ] Confirmar manualmente a abertura offline da PWA no iPhone depois da publicação.
-- [ ] Guardar novo checkpoint da versão offline corrigida.
+- [x] Confirmar manualmente a abertura offline da PWA no iPhone depois da publicação.
+- [x] Guardar novo checkpoint da versão offline corrigida.
 
 - [x] Mostrar no cabeçalho se o Super Tracker está online ou offline.
 - [x] Confirmar a persistência local no navegador e orientar a validação manual no iPhone.
