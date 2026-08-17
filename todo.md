@@ -9,3 +9,6 @@
 - [x] Adicionar manifest, ícones e metadados de instalação no Safari/iPhone.
 - [x] Validar o painel no tamanho de ecrã de iPhone e guardar a versão publicável.
 - [x] Guardar o checkpoint da versão PWA e confirmar que a cópia entregue mantém a apresentação no iPhone.
+- [x] Adicionar eliminação de histórico de estudo e avaliações com confirmação explícita.
+- [x] Adicionar limpeza geral dos dados locais com confirmação explícita e opção de exportar antes de apagar.
+- [x] Testar os fluxos de eliminação no formato de iPhone e guardar a versão atualizada.
