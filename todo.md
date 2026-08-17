@@ -27,16 +27,16 @@
 - [x] Testar persistência, migração, eliminação segura e funcionamento offline em navegador compatível.
 - [x] Guardar checkpoint da atualização de armazenamento.
 
-- [ ] Escolher o alojamento externo: GitHub Pages/Cloudflare Pages para PWA ou servidor Node para backend/autenticação.
+- [x] Escolher o alojamento externo: GitHub Pages para a PWA estática; backend não é necessário para o uso pessoal offline.
 - [x] Exportar o código e separar os componentes dependentes do Manus.
-- [ ] Definir substituto para OAuth, base de dados, storage e APIs Manus, caso sejam necessários fora da plataforma.
+- [x] Definir substituto para OAuth, base de dados, storage e APIs Manus, caso sejam necessários fora da plataforma: a cópia offline não usa OAuth, base de dados remota, storage remoto nem APIs Manus.
 - [ ] Configurar domínio, HTTPS, variáveis de ambiente e publicação externa. O workflow GitHub Pages foi incluído; falta ativação/verificação no GitHub.
 - [ ] Testar a PWA publicada, o modo offline e os fluxos de dados depois da migração.
 
-- [ ] Escolher o provedor de servidor Node externo e o domínio.
-- [ ] Escolher manter ou substituir a base de dados TiDB/MySQL e o storage de ficheiros.
-- [ ] Escolher substituto do Manus OAuth ou optar por aplicação single-tenant sem login.
-- [ ] Definir se as APIs de IA Manus serão mantidas ou substituídas por outro provedor.
+- [x] Escolher não usar servidor Node nem domínio próprio nesta primeira publicação; GitHub Pages é suficiente para a PWA.
+- [x] Escolher não usar TiDB/MySQL nem storage remoto; IndexedDB e OPFS permanecem locais no dispositivo.
+- [x] Optar por aplicação pessoal single-tenant sem login, preservando o funcionamento offline.
+- [x] Definir que a IA online é opcional e não faz parte da PWA offline; qualquer integração futura deverá usar um proxy externo seguro.
 
 - [x] Simplificar a exportação para PWA estática sem backend, login ou Supabase.
 - [x] Preparar a publicação externa da PWA e as instruções de domínio.
