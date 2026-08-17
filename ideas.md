@@ -68,3 +68,4 @@ Uma bússola geométrica aberta como um livro, formada por duas páginas azuis e
 - No desktop, a coluna lateral de missão mantém o ícone bússola/livro e a navegação como âncora de marca.
 - Cada área importante deve apresentar pelo menos um sinal editorial de caderno, como etiqueta de secção, linha pontilhada ou nota de margem.
 - A primeira ação após a hero deve ser um próximo passo académico concreto, com ligação direta a estudo, candidatura, bolsas ou universidade.
+- A marca em formato móvel combina o título editorial “Super Tracker” com uma assinatura em caixa alta, “Caderno de Josélio”, para reforçar a ideia de percurso académico pessoal.

@@ -279,7 +279,7 @@ export default function Home() {
 }
 
 function Brand({ compact = false }: { compact?: boolean }) {
-  return <div className="flex items-center gap-2.5"><img src={logoUrl} alt="Super Tracker" className="h-10 w-10 rounded-xl object-contain" /><div className={compact ? "" : ""}><p className="font-serif text-[17px] font-bold leading-none text-[#1e357b]">Super Tracker</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#7e8796]">Josélio</p></div></div>;
+  return <div className="flex items-center gap-2.5"><img src={logoUrl} alt="Super Tracker" className="h-10 w-10 rounded-xl object-contain" /><div className={compact ? "" : ""}><p className="font-serif text-[18px] font-bold leading-none tracking-[-0.03em] text-[#1e357b]">Super Tracker</p><p className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.22em] text-[#7e8796]">Caderno de Josélio</p></div></div>;
 }
 
 function NavButton({ item, active, onClick }: { item: { id: View; label: string; icon: typeof LayoutDashboard }; active: boolean; onClick: () => void }) {
