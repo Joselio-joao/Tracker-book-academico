@@ -30,8 +30,8 @@
 - [x] Escolher o alojamento externo: GitHub Pages para a PWA estática; backend não é necessário para o uso pessoal offline.
 - [x] Exportar o código e separar os componentes dependentes do Manus.
 - [x] Definir substituto para OAuth, base de dados, storage e APIs Manus, caso sejam necessários fora da plataforma: a cópia offline não usa OAuth, base de dados remota, storage remoto nem APIs Manus.
-- [ ] Configurar domínio, HTTPS, variáveis de ambiente e publicação externa. O workflow GitHub Pages foi incluído; falta ativação/verificação no GitHub.
-- [ ] Testar a PWA publicada, o modo offline e os fluxos de dados depois da migração.
+- [x] Configurar domínio, HTTPS, variáveis de ambiente e publicação externa. GitHub Pages ativo em https://joselio-joao.github.io/Tracker-book-academico/; a PWA estática não requer variáveis de ambiente.
+- [x] Testar a PWA publicada, o modo offline e os fluxos de dados depois da migração. O URL público carrega o painel em sessão limpa, o service worker está registado, a cache `super-tracker-shell-v3` existe, IndexedDB foi detetado e build/TypeScript/9 testes unitários passaram. Recomenda-se repetir a abertura sem rede no Safari do iPhone.
 
 - [x] Escolher não usar servidor Node nem domínio próprio nesta primeira publicação; GitHub Pages é suficiente para a PWA.
 - [x] Escolher não usar TiDB/MySQL nem storage remoto; IndexedDB e OPFS permanecem locais no dispositivo.
