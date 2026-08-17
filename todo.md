@@ -20,3 +20,9 @@
 
 - [x] Mostrar no cabeçalho se o Super Tracker está online ou offline.
 - [x] Confirmar a persistência local no navegador e orientar a validação manual no iPhone.
+
+- [x] Migrar dados estruturados de localStorage para IndexedDB com migração automática da versão existente.
+- [x] Adicionar camada opcional OPFS para ficheiros maiores e metadados de armazenamento.
+- [x] Mostrar quota e espaço usado através de Storage Manager e manter Cache API para os assets offline.
+- [x] Testar persistência, migração, eliminação segura e funcionamento offline em navegador compatível.
+- [x] Guardar checkpoint da atualização de armazenamento.

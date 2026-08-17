@@ -1,5 +1,5 @@
 // Design direction: Caderno de Missão Académica — editorial, focado em próximas ações e otimizado para cartões no telemóvel.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Award,
@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { clearTrackerSection, confirmDestructiveAction } from "@/lib/trackerData";
+import { estimateStorage, loadLargeFileMetadata, loadTrackerData, removeLargeFile, saveLargeFile, saveLargeFileMetadata, saveTrackerData, type StorageEstimate, type StoredFileMetadata } from "@/lib/offlineStorage";
 
 const logoUrl = "/manus-storage/super-tracker-logo_5d11d311.png";
 const heroUrl = "/manus-storage/academic-desk-hero_fdd86a25.jpg";
@@ -106,6 +107,7 @@ export default function Home() {
   const [data, setData] = useState<TrackerData>(defaultData);
   const [ready, setReady] = useState(false);
   const [isOnline, setIsOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
+  const [storageEstimate, setStorageEstimate] = useState<StorageEstimate>({ usage: 0, quota: 0, usageLabel: "0 B", quotaLabel: "a calcular" });
   const [moreSection, setMoreSection] = useState<"calendário" | "hábitos" | "currículo">("calendário");
   const [sessionForm, setSessionForm] = useState({ date: today, subject: "Matemática", minutes: "45", topic: "", quality: "4" });
   const [assessmentForm, setAssessmentForm] = useState({ date: today, subject: "Matemática", type: "Teste", score: "", total: "20" });
@@ -124,19 +126,23 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("joselio-super-tracker-v1");
-    if (saved) {
-      try {
-        setData({ ...defaultData, ...JSON.parse(saved) });
-      } catch {
-        window.localStorage.removeItem("joselio-super-tracker-v1");
-      }
-    }
-    setReady(true);
+    let cancelled = false;
+    void loadTrackerData(defaultData).then((stored) => {
+      if (cancelled) return;
+      setData(stored);
+      setReady(true);
+      void estimateStorage().then((estimate) => {
+        if (!cancelled) setStorageEstimate(estimate);
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    if (ready) window.localStorage.setItem("joselio-super-tracker-v1", JSON.stringify(data));
+    if (!ready) return;
+    void saveTrackerData(data).then(() => estimateStorage().then(setStorageEstimate));
   }, [data, ready]);
 
   const metrics = useMemo(() => {
@@ -296,7 +302,7 @@ export default function Home() {
           {view === "estudo" && <StudyView sessionForm={sessionForm} setSessionForm={setSessionForm} assessmentForm={assessmentForm} setAssessmentForm={setAssessmentForm} onSession={addSession} onAssessment={addAssessment} sessions={data.sessions} assessments={data.assessments} subjectStats={subjectStats} onClearSessions={clearSessions} onClearAssessments={clearAssessments} />}
           {view === "universidade" && <UniversityView tasks={data.universityTasks} taskTitle={taskTitle} setTaskTitle={setTaskTitle} onAddTask={addTask} onToggle={toggleTask} />}
           {view === "bolsas" && <ScholarshipsView scholarships={data.scholarships} form={scholarshipForm} setForm={setScholarshipForm} onSubmit={addScholarship} onStatus={setScholarshipStatus} />}
-          {view === "mais" && <MoreView section={moreSection} setSection={setMoreSection} habits={data.habits[today] || {}} onToggleHabit={toggleHabit} habitRate={metrics.habitRate} onClearHabits={clearHabits} onClearTasks={clearTasks} onClearScholarships={clearScholarships} onClearAll={clearAllData} onExport={exportData} />}
+          {view === "mais" && <MoreView section={moreSection} setSection={setMoreSection} habits={data.habits[today] || {}} onToggleHabit={toggleHabit} habitRate={metrics.habitRate} onClearHabits={clearHabits} onClearTasks={clearTasks} onClearScholarships={clearScholarships} onClearAll={clearAllData} onExport={exportData} storageEstimate={storageEstimate} />}
         </div>
       </main>
 
@@ -396,14 +402,54 @@ function ScholarshipsView({ scholarships, form, setForm, onSubmit, onStatus }: {
   </div>;
 }
 
-function MoreView({ section, setSection, habits, onToggleHabit, habitRate, onClearHabits, onClearTasks, onClearScholarships, onClearAll, onExport }: { section: "calendário" | "hábitos" | "currículo"; setSection: (section: "calendário" | "hábitos" | "currículo") => void; habits: Record<string, boolean>; onToggleHabit: (habit: string) => void; habitRate: number; onClearHabits: () => void; onClearTasks: () => void; onClearScholarships: () => void; onClearAll: () => void; onExport: () => void }) {
+function MoreView({ section, setSection, habits, onToggleHabit, habitRate, onClearHabits, onClearTasks, onClearScholarships, onClearAll, onExport, storageEstimate }: { section: "calendário" | "hábitos" | "currículo"; setSection: (section: "calendário" | "hábitos" | "currículo") => void; habits: Record<string, boolean>; onToggleHabit: (habit: string) => void; habitRate: number; onClearHabits: () => void; onClearTasks: () => void; onClearScholarships: () => void; onClearAll: () => void; onExport: () => void; storageEstimate: StorageEstimate }) {
   const months = ["Ago", "Set", "Out", "Nov", "Dez", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul"];
+  const [largeFiles, setLargeFiles] = useState<StoredFileMetadata[]>([]);
+  const [fileStatus, setFileStatus] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    void loadLargeFileMetadata().then(setLargeFiles);
+  }, []);
+
+  const fileSizeLabel = (bytes: number) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  const handleLargeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const saved = await saveLargeFile(file.name, file);
+      if (!saved) {
+        setFileStatus("OPFS não está disponível neste navegador.");
+        return;
+      }
+      const next = [...largeFiles.filter((item) => item.name !== file.name), { name: file.name, size: file.size, type: file.type || "application/octet-stream", updatedAt: Date.now() }];
+      setLargeFiles(next);
+      await saveLargeFileMetadata(next);
+      setFileStatus(`${file.name} guardado no armazenamento privado.`);
+    } catch {
+      setFileStatus("Não foi possível guardar este ficheiro.");
+    }
+  };
+
+  const handleRemoveLargeFile = async (fileName: string) => {
+    try {
+      await removeLargeFile(fileName);
+      const next = largeFiles.filter((item) => item.name !== fileName);
+      setLargeFiles(next);
+      await saveLargeFileMetadata(next);
+      setFileStatus(`${fileName} removido.`);
+    } catch {
+      setFileStatus("Não foi possível remover este ficheiro.");
+    }
+  };
+
   return <div className="space-y-6"><PageHeading eyebrow="Ferramentas de apoio" title="Calendário, hábitos e currículo" description="Informação organizada em blocos verticais para continuar confortável no telemóvel." />
     <div className="inline-flex rounded-xl bg-[#e8ebe6] p-1">{(["calendário", "hábitos", "currículo"] as const).map((item) => <button key={item} onClick={() => setSection(item)} className={`rounded-lg px-3 py-2 text-xs font-extrabold capitalize transition ${section === item ? "bg-white text-[#2457c5] shadow-sm" : "text-[#6e7685]"}`}>{item}</button>)}</div>
     {section === "calendário" && <section className="rounded-[26px] border border-[#dfe2d7] bg-white p-5 shadow-[0_12px_30px_rgba(36,48,80,0.05)] sm:p-6"><p className="tag">Ciclo 2026/2027</p><h2 className="mt-1 font-serif text-2xl font-bold">Mapa de tempo</h2><div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{months.map((month, index) => { const preparation = index < 4; const trimester = index < 4 ? "Preparação universitária" : index < 7 ? "1º trimestre" : index < 9 ? "2º trimestre" : "3º trimestre"; return <div key={month} className={`rounded-2xl border p-4 ${preparation ? "border-[#dce6ff] bg-[#f4f7ff]" : "border-[#e7e6dd] bg-[#fffefb]"}`}><div className="flex items-center justify-between"><span className="font-serif text-xl font-bold">{month}</span><span className={`h-2.5 w-2.5 rounded-full ${preparation ? "bg-[#6386d8]" : "bg-[#59a777]"}`} /></div><p className="mt-5 text-xs font-bold text-[#697487]">{trimester}</p><p className="mt-1 text-sm text-[#43506b]">{preparation ? "Idiomas, perfil, bolsas e documentos." : "Aulas, exercícios, avaliações e revisão."}</p></div>})}</div></section>}
     {section === "hábitos" && <section className="grid gap-6 xl:grid-cols-[.7fr_1.3fr]"><div className="rounded-[26px] bg-[#315d4c] p-6 text-white"><p className="tag text-[#c2e6cd]">Hoje</p><p className="mt-2 font-serif text-5xl font-bold">{Math.round(habitRate)}%</p><p className="mt-2 text-sm leading-6 text-[#d4eadb]">A consistência pequena e repetida constrói a preparação maior.</p><Progress value={habitRate} className="mt-6 h-2 bg-white/20 [&>div]:bg-[#f6c95f]" /></div><div className="rounded-[26px] border border-[#dfe2d7] bg-white p-5 shadow-[0_12px_30px_rgba(36,48,80,0.05)] sm:p-6"><p className="tag">Rotina diária</p><h2 className="mt-1 font-serif text-2xl font-bold">Marca o que fizeste</h2><div className="mt-5 grid gap-2 sm:grid-cols-2">{habitLabels.map((habit) => <button key={habit} onClick={() => onToggleHabit(habit)} className={`flex items-center justify-between rounded-2xl border p-4 text-left transition ${habits[habit] ? "border-[#cfe4d5] bg-[#effaf1]" : "border-[#e4e8df] bg-[#fffefb] hover:border-[#c7d4f4]"}`}><span className="text-sm font-bold">{habit}</span><span className={`grid h-6 w-6 place-items-center rounded-full border ${habits[habit] ? "border-[#3f8a5c] bg-[#3f8a5c] text-white" : "border-[#bdc5d4] text-transparent"}`}><Check className="h-4 w-4" /></span></button>)}</div></div></section>}
     {section === "currículo" && <section className="rounded-[26px] border border-[#dfe2d7] bg-white p-5 shadow-[0_12px_30px_rgba(36,48,80,0.05)] sm:p-6"><p className="tag">Referência interdisciplinar</p><h2 className="mt-1 font-serif text-2xl font-bold">Currículo em blocos</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#707b8d]">Usa estes blocos para ligar temas, exercícios e revisões. A versão Excel continua a guardar o detalhe importado dos PPP.</p><div className="mt-6 grid gap-3 md:grid-cols-2">{curriculum.map((item) => <article key={item.subject} className="rounded-2xl border border-[#e4e7df] bg-[#fffefb] p-5"><div className="flex items-center gap-3"><span className={`h-2.5 w-2.5 rounded-full ${item.color === "blue" ? "bg-[#2457c5]" : item.color === "violet" ? "bg-[#8451c4]" : item.color === "amber" ? "bg-[#d79620]" : "bg-[#4f9b68]"}`} /><h3 className="font-serif text-xl font-bold">{item.subject}</h3></div><p className="mt-3 text-sm leading-6 text-[#667085]">{item.focus}</p><button className="mt-4 inline-flex items-center gap-1 text-xs font-extrabold text-[#2457c5]">Criar sessão de estudo <ChevronRight className="h-3.5 w-3.5" /></button></article>)}</div></section>}
-    <DataControls onClearHabits={onClearHabits} onClearTasks={onClearTasks} onClearScholarships={onClearScholarships} onClearAll={onClearAll} onExport={onExport} />
+    <section className="rounded-[26px] border border-[#dfe2d7] bg-white p-5 shadow-[0_12px_30px_rgba(36,48,80,0.05)] sm:p-6"><div className="flex items-start justify-between gap-4"><div><p className="tag">Armazenamento offline</p><h2 className="mt-1 font-serif text-2xl font-bold">Dados no dispositivo</h2><p className="mt-2 text-sm leading-6 text-[#707b8d]">IndexedDB guarda o tracker; o cache offline mantém a aplicação disponível sem Internet.</p></div><span className="rounded-full bg-[#edf2ff] px-3 py-1.5 text-xs font-bold text-[#2457c5]">IndexedDB</span></div><div className="mt-5 flex items-center justify-between text-sm font-bold"><span>{storageEstimate.usageLabel} usados</span><span className="text-[#778196]">de {storageEstimate.quotaLabel}</span></div><Progress value={storageEstimate.quota ? Math.min(100, (storageEstimate.usage / storageEstimate.quota) * 100) : 0} className="mt-2 h-2 bg-[#e9edf7] [&>div]:bg-[#2457c5]" /></section><section className="rounded-[26px] border border-[#ded8ea] bg-[#fcfaff] p-5 shadow-[0_12px_30px_rgba(36,48,80,0.05)] sm:p-6"><div className="flex items-start justify-between gap-4"><div><p className="tag text-[#7250a3]">Ficheiros grandes</p><h2 className="mt-1 font-serif text-2xl font-bold">Arquivo privado OPFS</h2><p className="mt-2 text-sm leading-6 text-[#707b8d]">Guarda PDFs, imagens e ficheiros de estudo no sandbox privado do navegador.</p></div><Button onClick={() => fileInputRef.current?.click()} variant="outline" className="shrink-0 rounded-xl border-[#cbbbe4] bg-white text-xs font-bold text-[#7250a3]">Adicionar</Button></div><input ref={fileInputRef} type="file" className="hidden" onChange={handleLargeFile} /><div className="mt-4 space-y-2">{largeFiles.length ? largeFiles.map((file) => <div key={file.name} className="flex items-center justify-between gap-3 rounded-xl border border-[#e9e1f3] bg-white px-3 py-2"><div className="min-w-0"><p className="truncate text-sm font-bold">{file.name}</p><p className="text-xs text-[#788194]">{fileSizeLabel(file.size)} · {file.type || "ficheiro"}</p></div><button onClick={() => void handleRemoveLargeFile(file.name)} className="text-xs font-extrabold text-[#a14837]">Remover</button></div>) : <p className="text-sm text-[#788194]">Ainda não há ficheiros grandes guardados.</p>}</div>{fileStatus && <p className="mt-3 text-xs font-bold text-[#7250a3]">{fileStatus}</p>}</section><DataControls onClearHabits={onClearHabits} onClearTasks={onClearTasks} onClearScholarships={onClearScholarships} onClearAll={onClearAll} onExport={onExport} />
   </div>;
 }
 
