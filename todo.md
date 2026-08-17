@@ -13,6 +13,7 @@
 - [x] Adicionar limpeza geral dos dados locais com confirmação explícita e opção de exportar antes de apagar.
 - [x] Testar os fluxos de eliminação no formato de iPhone e guardar a versão atualizada.
 
-- [ ] Corrigir o cache do service worker para guardar todos os ficheiros da aplicação após a primeira abertura online.
-- [ ] Testar a abertura offline e a persistência dos registos no iPhone.
+- [x] Corrigir o cache do service worker para guardar todos os ficheiros da aplicação após a primeira abertura online.
+- [x] Validar o cache do service worker e a persistência dos registos no navegador.
+- [ ] Confirmar manualmente a abertura offline da PWA no iPhone depois da publicação.
 - [ ] Guardar novo checkpoint da versão offline corrigida.
