@@ -105,11 +105,23 @@ export default function Home() {
   const [view, setView] = useState<View>("painel");
   const [data, setData] = useState<TrackerData>(defaultData);
   const [ready, setReady] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
   const [moreSection, setMoreSection] = useState<"calendário" | "hábitos" | "currículo">("calendário");
   const [sessionForm, setSessionForm] = useState({ date: today, subject: "Matemática", minutes: "45", topic: "", quality: "4" });
   const [assessmentForm, setAssessmentForm] = useState({ date: today, subject: "Matemática", type: "Teste", score: "", total: "20" });
   const [taskTitle, setTaskTitle] = useState("");
   const [scholarshipForm, setScholarshipForm] = useState({ name: "", country: "", source: "", note: "" });
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("joselio-super-tracker-v1");
@@ -266,7 +278,14 @@ export default function Home() {
             <div className="flex items-center gap-3 lg:hidden"><Brand compact /></div>
             <div className="hidden lg:block"><p className="text-xs font-semibold text-[#63708a]">Sábado, 17 de agosto</p><p className="font-serif text-xl font-bold">Olá, Josélio.</p></div>
             <div className="flex items-center gap-2">
-              <span className="hidden rounded-full bg-[#e9f2e8] px-3 py-1.5 text-xs font-bold text-[#336547] sm:inline-flex">Dados guardados neste dispositivo</span>
+              <span
+                title={isOnline ? "Online · dados guardados neste dispositivo" : "Offline · dados neste dispositivo"}
+                aria-label={isOnline ? "Online · dados guardados neste dispositivo" : "Offline · dados neste dispositivo"}
+                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-bold sm:px-3 ${isOnline ? "bg-[#e9f2e8] text-[#336547]" : "bg-[#fff1c7] text-[#8b5a00]"}`}
+              >
+                <span className="h-2 w-2 rounded-full bg-current" />
+                <span className="hidden sm:inline">{isOnline ? "Online · dados guardados" : "Offline · dados neste dispositivo"}</span>
+              </span>
               <Button onClick={exportData} variant="outline" className="h-9 rounded-xl border-[#cdd4e7] bg-white text-xs font-bold text-[#274592] hover:bg-[#edf2ff]"><Download className="mr-1.5 h-4 w-4" />Exportar</Button>
             </div>
           </div>
