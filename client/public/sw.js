@@ -1,5 +1,5 @@
-const CACHE_NAME = "super-tracker-shell-v2";
-const APP_SHELL = ["/"];
+const CACHE_NAME = "super-tracker-shell-v3";
+const APP_SHELL = [new URL("./", self.registration.scope).href];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -17,6 +17,7 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
+  const shellUrl = new URL("./", self.registration.scope).href;
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
@@ -26,7 +27,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }
         return response;
-      }).catch(() => caches.match("/"));
+      }).catch(() => caches.match(shellUrl));
     }),
   );
 });

@@ -29,9 +29,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { clearTrackerSection, confirmDestructiveAction } from "@/lib/trackerData";
 import { estimateStorage, loadLargeFileMetadata, loadTrackerData, removeLargeFile, saveLargeFile, saveLargeFileMetadata, saveTrackerData, type StorageEstimate, type StoredFileMetadata } from "@/lib/offlineStorage";
 
-const logoUrl = "/manus-storage/super-tracker-logo_5d11d311.png";
-const heroUrl = "/manus-storage/academic-desk-hero_fdd86a25.jpg";
-const orbitUrl = "/manus-storage/study-orbit-illustration_319fba22.png";
+const logoUrl = "./assets/super-tracker-logo.png";
+const heroUrl = "./assets/academic-desk-hero.jpg";
+const orbitUrl = "./assets/study-orbit-illustration.png";
 
 const subjects = [
   "Língua Portuguesa",

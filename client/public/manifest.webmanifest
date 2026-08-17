@@ -3,13 +3,13 @@
   "short_name": "Super Tracker",
   "description": "Estudo, universidade, bolsas e hábitos num só lugar.",
   "lang": "pt-PT",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#F7F6F1",
   "theme_color": "#2457C5",
   "icons": [
     {
-      "src": "/manus-storage/super-tracker-logo_5d11d311.png",
+      "src": "./assets/super-tracker-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

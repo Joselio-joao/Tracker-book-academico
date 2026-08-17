@@ -26,3 +26,18 @@
 - [x] Mostrar quota e espaço usado através de Storage Manager e manter Cache API para os assets offline.
 - [x] Testar persistência, migração, eliminação segura e funcionamento offline em navegador compatível.
 - [x] Guardar checkpoint da atualização de armazenamento.
+
+- [ ] Escolher o alojamento externo: GitHub Pages/Cloudflare Pages para PWA ou servidor Node para backend/autenticação.
+- [x] Exportar o código e separar os componentes dependentes do Manus.
+- [ ] Definir substituto para OAuth, base de dados, storage e APIs Manus, caso sejam necessários fora da plataforma.
+- [ ] Configurar domínio, HTTPS, variáveis de ambiente e publicação externa.
+- [ ] Testar a PWA publicada, o modo offline e os fluxos de dados depois da migração.
+
+- [ ] Escolher o provedor de servidor Node externo e o domínio.
+- [ ] Escolher manter ou substituir a base de dados TiDB/MySQL e o storage de ficheiros.
+- [ ] Escolher substituto do Manus OAuth ou optar por aplicação single-tenant sem login.
+- [ ] Definir se as APIs de IA Manus serão mantidas ou substituídas por outro provedor.
+
+- [x] Simplificar a exportação para PWA estática sem backend, login ou Supabase.
+- [x] Preparar a publicação externa da PWA e as instruções de domínio.
+- [x] Confirmar que IndexedDB, OPFS, Cache API e modo offline permanecem funcionais após a exportação.
