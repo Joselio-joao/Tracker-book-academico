@@ -30,7 +30,7 @@
 - [ ] Escolher o alojamento externo: GitHub Pages/Cloudflare Pages para PWA ou servidor Node para backend/autenticação.
 - [x] Exportar o código e separar os componentes dependentes do Manus.
 - [ ] Definir substituto para OAuth, base de dados, storage e APIs Manus, caso sejam necessários fora da plataforma.
-- [ ] Configurar domínio, HTTPS, variáveis de ambiente e publicação externa.
+- [ ] Configurar domínio, HTTPS, variáveis de ambiente e publicação externa. O workflow GitHub Pages foi incluído; falta ativação/verificação no GitHub.
 - [ ] Testar a PWA publicada, o modo offline e os fluxos de dados depois da migração.
 
 - [ ] Escolher o provedor de servidor Node externo e o domínio.
