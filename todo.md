@@ -12,3 +12,7 @@
 - [x] Adicionar eliminação de histórico de estudo e avaliações com confirmação explícita.
 - [x] Adicionar limpeza geral dos dados locais com confirmação explícita e opção de exportar antes de apagar.
 - [x] Testar os fluxos de eliminação no formato de iPhone e guardar a versão atualizada.
+
+- [ ] Corrigir o cache do service worker para guardar todos os ficheiros da aplicação após a primeira abertura online.
+- [ ] Testar a abertura offline e a persistência dos registos no iPhone.
+- [ ] Guardar novo checkpoint da versão offline corrigida.
