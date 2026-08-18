@@ -3,6 +3,7 @@ export type TrackerStore = {
   assessments: unknown[];
   universityTasks: unknown[];
   scholarships: unknown[];
+  notes: unknown[];
   habits: Record<string, Record<string, boolean>>;
 };
 
@@ -11,7 +12,7 @@ export type ClearableSection = keyof TrackerStore | "all";
 /** Returns a new store with only the requested local-data area cleared. */
 export function clearTrackerSection<T extends TrackerStore>(data: T, section: ClearableSection): T {
   if (section === "all") {
-    return { ...data, sessions: [], assessments: [], universityTasks: [], scholarships: [], habits: {} };
+    return { ...data, sessions: [], assessments: [], universityTasks: [], scholarships: [], notes: [], habits: {} };
   }
 
   const emptyValue = section === "habits" ? {} : [];

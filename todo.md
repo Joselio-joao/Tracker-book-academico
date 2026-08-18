@@ -41,3 +41,7 @@
 - [x] Simplificar a exportação para PWA estática sem backend, login ou Supabase.
 - [x] Preparar a publicação externa da PWA e as instruções de domínio.
 - [x] Confirmar que IndexedDB, OPFS, Cache API e modo offline permanecem funcionais após a exportação.
+
+- [x] Adicionar eliminação individual por registo nas opções/áreas de gestão, com confirmação e feedback.
+- [x] Criar bloco de notas académico offline, com criar, editar, pesquisar, fixar e eliminar notas individualmente.
+- [x] Testar persistência IndexedDB, confirmações de eliminação, exportação/importação e responsividade das novas funções.
