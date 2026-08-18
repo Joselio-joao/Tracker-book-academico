@@ -45,3 +45,6 @@
 - [x] Adicionar eliminação individual por registo nas opções/áreas de gestão, com confirmação e feedback.
 - [x] Criar bloco de notas académico offline, com criar, editar, pesquisar, fixar e eliminar notas individualmente.
 - [x] Testar persistência IndexedDB, confirmações de eliminação, exportação/importação e responsividade das novas funções.
+
+- [x] Publicar no GitHub Pages a atualização do bloco de notas e das remoções individuais, usando o repositório Tracker-book-academico como destino final.
+- [x] Confirmar no URL público que a nova versão do GitHub Pages está disponível.
