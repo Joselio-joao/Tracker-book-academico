@@ -7,7 +7,9 @@ const store = {
   universityTasks: [{ id: "task-1" }],
   scholarships: [{ id: "scholar-1" }],
   notes: [{ id: "note-1" }],
+  tutors: [{ id: "tutor-1" }],
   habits: { "2026-08-17": { Estudo: true } },
+  timer: { duration: 45, remaining: 45 * 60, running: false, endsAt: null },
 };
 
 describe("clearTrackerSection", () => {
@@ -20,7 +22,7 @@ describe("clearTrackerSection", () => {
 
   it("limpa todas as áreas quando o utilizador confirma apagar tudo", () => {
     const cleared = clearTrackerSection(store, "all");
-    expect(cleared).toEqual({ sessions: [], assessments: [], universityTasks: [], scholarships: [], notes: [], habits: {} });
+    expect(cleared).toEqual({ sessions: [], assessments: [], universityTasks: [], scholarships: [], notes: [], tutors: [], habits: {}, timer: { duration: 45, remaining: 45 * 60, running: false, endsAt: null } });
   });
 
   it("preserva os dados quando a confirmação de apagamento é cancelada", () => {

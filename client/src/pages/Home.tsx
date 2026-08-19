@@ -1,6 +1,7 @@
 // Design direction: Caderno de Missão Académica — editorial, focado em próximas ações e otimizado para cartões no telemóvel.
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlarmClock,
   ArrowUpRight,
   Award,
   BookOpen,
@@ -13,7 +14,11 @@ import {
   Download,
   GraduationCap,
   LayoutDashboard,
+  Pause,
+  Phone,
+  Play,
   Plus,
+  RotateCcw,
   Sparkles,
   Target,
   TimerReset,
@@ -22,6 +27,7 @@ import {
   Pencil,
   Search,
   Trophy,
+  UserRound,
 } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
@@ -32,7 +38,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { clearTrackerSection, confirmDestructiveAction } from "@/lib/trackerData";
 import { estimateStorage, loadLargeFileMetadata, loadTrackerData, removeLargeFile, saveLargeFile, saveLargeFileMetadata, saveTrackerData, type StorageEstimate, type StoredFileMetadata } from "@/lib/offlineStorage";
 
-const logoUrl = "./assets/super-tracker-logo.png";
+const logoUrl = "./logo.png";
 const heroUrl = "./assets/academic-desk-hero.jpg";
 const orbitUrl = "./assets/study-orbit-illustration.png";
 
@@ -50,14 +56,16 @@ const subjects = [
   "Inglês",
 ] as const;
 
-type View = "painel" | "estudo" | "universidade" | "bolsas" | "mais";
+type View = "painel" | "estudo" | "universidade" | "bolsas" | "tutores" | "mais";
 type StudySession = { id: string; date: string; subject: string; minutes: number; topic: string; quality: number };
 type Assessment = { id: string; date: string; subject: string; type: string; score: number; total: number };
 type UniversityTask = { id: string; title: string; area: string; due: string; done: boolean; priority: "Alta" | "Média" | "Baixa" };
 type Scholarship = { id: string; name: string; country: string; category: string; source: string; status: "Monitorizar" | "Em preparação" | "Candidatura enviada"; note: string };
 type Note = { id: string; title: string; content: string; subject: string; pinned: boolean; createdAt: number; updatedAt: number };
+type Tutor = { id: string; name: string; role: string; phone: string; email: string; subject: string; notes: string };
+type TimerSettings = { duration: number; remaining: number; running: boolean; endsAt: number | null };
 type Habits = Record<string, Record<string, boolean>>;
-type TrackerData = { sessions: StudySession[]; assessments: Assessment[]; universityTasks: UniversityTask[]; scholarships: Scholarship[]; notes: Note[]; habits: Habits };
+type TrackerData = { sessions: StudySession[]; assessments: Assessment[]; universityTasks: UniversityTask[]; scholarships: Scholarship[]; notes: Note[]; tutors: Tutor[]; habits: Habits; timer: TimerSettings };
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -78,7 +86,9 @@ const defaultData: TrackerData = {
     { id: "s3", name: "INAGBE", country: "Angola / acordos", category: "Bolsa pública", source: "https://inagbe.gov.ao", status: "Monitorizar", note: "Acompanhar editais em paralelo às candidaturas diretas." },
   ],
   notes: [],
+  tutors: [],
   habits: {},
+  timer: { duration: 45, remaining: 45 * 60, running: false, endsAt: null },
 };
 
 const curriculum = [
@@ -93,6 +103,7 @@ const navItems: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "estudo", label: "Estudo", icon: TimerReset },
   { id: "universidade", label: "Universidade", icon: GraduationCap },
   { id: "bolsas", label: "Bolsas", icon: Award },
+  { id: "tutores", label: "Tutores", icon: UserRound },
   { id: "mais", label: "Mais", icon: Compass },
 ];
 
@@ -119,6 +130,9 @@ export default function Home() {
   const [assessmentForm, setAssessmentForm] = useState({ date: today, subject: "Matemática", type: "Teste", score: "", total: "20" });
   const [taskTitle, setTaskTitle] = useState("");
   const [scholarshipForm, setScholarshipForm] = useState({ name: "", country: "", source: "", note: "" });
+  const [tutorForm, setTutorForm] = useState({ name: "", role: "Professor/tutor", phone: "", email: "", subject: "", notes: "" });
+  const [timerRemaining, setTimerRemaining] = useState(defaultData.timer.duration * 60);
+  const [timerRunning, setTimerRunning] = useState(false);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -135,7 +149,12 @@ export default function Home() {
     let cancelled = false;
     void loadTrackerData(defaultData).then((stored) => {
       if (cancelled) return;
-      setData({ ...defaultData, ...stored, notes: stored.notes ?? [] });
+      const hydrated = { ...defaultData, ...stored, notes: stored.notes ?? [], tutors: stored.tutors ?? [], timer: { ...defaultData.timer, ...(stored.timer ?? {}) } };
+      const restoredRemaining = hydrated.timer.running && hydrated.timer.endsAt ? Math.max(0, Math.ceil((hydrated.timer.endsAt - Date.now()) / 1000)) : hydrated.timer.remaining;
+      setData(hydrated);
+      setTimerRemaining(restoredRemaining);
+      setTimerRunning(hydrated.timer.running && restoredRemaining > 0);
+      if (hydrated.timer.running && restoredRemaining <= 0) setData((current) => ({ ...current, timer: { ...current.timer, running: false, remaining: 0, endsAt: null } }));
       setReady(true);
       void estimateStorage().then((estimate) => {
         if (!cancelled) setStorageEstimate(estimate);
@@ -150,6 +169,25 @@ export default function Home() {
     if (!ready) return;
     void saveTrackerData(data).then(() => estimateStorage().then(setStorageEstimate));
   }, [data, ready]);
+
+  useEffect(() => {
+    if (!timerRunning) return;
+    const interval = window.setInterval(() => {
+      setTimerRemaining((current) => {
+        if (current <= 1) {
+          window.clearInterval(interval);
+          setTimerRunning(false);
+          setData((current) => ({ ...current, timer: { ...current.timer, remaining: 0, running: false, endsAt: null } }));
+          toast.success("Tempo concluído. Faz uma pausa e regista a sessão.");
+          if ("Notification" in window && Notification.permission === "granted") new Notification("Super Tracker", { body: "O teu tempo de estudo terminou." });
+          if ("vibrate" in navigator) navigator.vibrate?.([250, 120, 250]);
+          return 0;
+        }
+        return current - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [timerRunning]);
 
   const metrics = useMemo(() => {
     const totalMinutes = data.sessions.reduce((sum, session) => sum + session.minutes, 0);
@@ -227,6 +265,24 @@ export default function Home() {
     setTaskTitle("");
   };
 
+  const updateTutor = (id: string, changes: Omit<Tutor, "id">) => {
+    if (!changes.name.trim() || (!changes.phone.trim() && !changes.email.trim())) { toast.error("Indica o nome e pelo menos um contacto."); return false; }
+    setData((current) => ({ ...current, tutors: current.tutors.map((tutor) => tutor.id === id ? { id, ...changes, name: changes.name.trim(), role: changes.role.trim() || "Professor/tutor", phone: changes.phone.trim(), email: changes.email.trim(), subject: changes.subject.trim(), notes: changes.notes.trim() } : tutor) }));
+    toast.success("Contacto do tutor atualizado.");
+    return true;
+  };
+
+  const addTutor = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!tutorForm.name.trim() || (!tutorForm.phone.trim() && !tutorForm.email.trim())) {
+      toast.error("Indica o nome e pelo menos um contacto.");
+      return;
+    }
+    setData((current) => ({ ...current, tutors: [{ id: crypto.randomUUID(), name: tutorForm.name.trim(), role: tutorForm.role.trim() || "Professor/tutor", phone: tutorForm.phone.trim(), email: tutorForm.email.trim(), subject: tutorForm.subject.trim(), notes: tutorForm.notes.trim() }, ...current.tutors] }));
+    setTutorForm({ name: "", role: "Professor/tutor", phone: "", email: "", subject: "", notes: "" });
+    toast.success("Contacto do tutor guardado.");
+  };
+
   const addScholarship = (event: React.FormEvent) => {
     event.preventDefault();
     if (!scholarshipForm.name.trim() || !scholarshipForm.source.trim()) {
@@ -281,6 +337,27 @@ export default function Home() {
     toast.success("Nota guardada no dispositivo.");
   };
   const toggleNotePin = (id: string) => setData((current) => ({ ...current, notes: current.notes.map((note) => note.id === id ? { ...note, pinned: !note.pinned, updatedAt: Date.now() } : note) }));
+  const requestTimerNotification = async () => {
+    if (!("Notification" in window)) { toast.message("O despertador visual funciona; este navegador não suporta notificações."); return; }
+    if (Notification.permission === "default") await Notification.requestPermission();
+  };
+  const setTimerDuration = (minutes: number) => {
+    const safeMinutes = Math.max(1, Math.min(180, minutes));
+    const nextRemaining = safeMinutes * 60;
+    setData((current) => ({ ...current, timer: { duration: safeMinutes, remaining: nextRemaining, running: false, endsAt: null } }));
+    if (!timerRunning) setTimerRemaining(nextRemaining);
+    setTimerRunning(false);
+  };
+  const toggleTimer = () => {
+    const nextRunning = !timerRunning;
+    const nextRemaining = timerRemaining <= 0 ? data.timer.duration * 60 : timerRemaining;
+    setTimerRemaining(nextRemaining);
+    setTimerRunning(nextRunning);
+    setData((current) => ({ ...current, timer: { ...current.timer, remaining: nextRemaining, running: nextRunning, endsAt: nextRunning ? Date.now() + nextRemaining * 1000 : null } }));
+    if (nextRunning) void requestTimerNotification();
+  };
+  const resetTimer = () => { const nextRemaining = data.timer.duration * 60; setTimerRunning(false); setTimerRemaining(nextRemaining); setData((current) => ({ ...current, timer: { ...current.timer, remaining: nextRemaining, running: false, endsAt: null } })); };
+
   const updateNote = (id: string, changes: Pick<Note, "title" | "content" | "subject">) => {
     if (!changes.title.trim() || !changes.content.trim()) { toast.error("A nota precisa de título e conteúdo."); return false; }
     setData((current) => ({ ...current, notes: current.notes.map((note) => note.id === id ? { ...note, ...changes, title: changes.title.trim(), content: changes.content.trim(), subject: changes.subject.trim() || "Geral", updatedAt: Date.now() } : note) }));
@@ -308,7 +385,7 @@ export default function Home() {
         <header className="sticky top-0 z-20 border-b border-[#e2e2d9]/80 bg-[#f8f6ef]/90 px-4 py-3 backdrop-blur-lg sm:px-7 lg:px-9">
           <div className="mx-auto flex max-w-[1450px] items-center justify-between gap-3">
             <div className="flex items-center gap-3 lg:hidden"><Brand compact /></div>
-            <div className="hidden lg:block"><p className="text-xs font-semibold text-[#63708a]">Sábado, 17 de agosto</p><p className="font-serif text-xl font-bold">Olá, Josélio.</p></div>
+            <div className="hidden lg:block"><p className="text-xs font-semibold text-[#63708a]">Sábado, 17 de agosto</p><p className="font-serif text-xl font-bold">Super Tracker académico</p></div>
             <div className="flex items-center gap-2">
               <span
                 title={isOnline ? "Online · dados guardados neste dispositivo" : "Offline · dados neste dispositivo"}
@@ -325,9 +402,10 @@ export default function Home() {
 
         <div className="mx-auto max-w-[1450px] px-4 py-6 sm:px-7 lg:px-9 lg:py-8">
           {view === "painel" && <Dashboard metrics={metrics} subjectStats={subjectStats} sessions={data.sessions} onStartStudy={() => setView("estudo")} onOpenUni={() => setView("universidade")} />}
-          {view === "estudo" && <StudyView sessionForm={sessionForm} setSessionForm={setSessionForm} assessmentForm={assessmentForm} setAssessmentForm={setAssessmentForm} onSession={addSession} onAssessment={addAssessment} sessions={data.sessions} assessments={data.assessments} subjectStats={subjectStats} onClearSessions={clearSessions} onClearAssessments={clearAssessments} onRemoveSession={(id) => removeItem("sessions", id, "Sessão de estudo")} onRemoveAssessment={(id) => removeItem("assessments", id, "Avaliação")} />}
+          {view === "estudo" && <StudyView sessionForm={sessionForm} setSessionForm={setSessionForm} assessmentForm={assessmentForm} setAssessmentForm={setAssessmentForm} onSession={addSession} onAssessment={addAssessment} sessions={data.sessions} assessments={data.assessments} subjectStats={subjectStats} onClearSessions={clearSessions} onClearAssessments={clearAssessments} onRemoveSession={(id) => removeItem("sessions", id, "Sessão de estudo")} onRemoveAssessment={(id) => removeItem("assessments", id, "Avaliação")} timerDuration={data.timer.duration} timerRemaining={timerRemaining} timerRunning={timerRunning} onTimerDuration={setTimerDuration} onToggleTimer={toggleTimer} onResetTimer={resetTimer} />}
           {view === "universidade" && <UniversityView tasks={data.universityTasks} taskTitle={taskTitle} setTaskTitle={setTaskTitle} onAddTask={addTask} onToggle={toggleTask} onRemoveTask={(id) => removeItem("universityTasks", id, "Etapa universitária")} />}
           {view === "bolsas" && <ScholarshipsView scholarships={data.scholarships} form={scholarshipForm} setForm={setScholarshipForm} onSubmit={addScholarship} onStatus={setScholarshipStatus} onRemove={(id) => removeItem("scholarships", id, "Oportunidade")} />}
+          {view === "tutores" && <TutorsView tutors={data.tutors} form={tutorForm} setForm={setTutorForm} onSubmit={addTutor} onUpdate={updateTutor} onRemove={(id) => removeItem("tutors", id, "Contacto do tutor")} />}
           {view === "mais" && <MoreView section={moreSection} setSection={setMoreSection} habits={data.habits[today] || {}} onToggleHabit={toggleHabit} habitRate={metrics.habitRate} notes={data.notes} noteForm={noteForm} setNoteForm={setNoteForm} onAddNote={addNote} onToggleNotePin={toggleNotePin} onUpdateNote={updateNote} onRemoveNote={(id) => removeItem("notes", id, "Nota")} onClearHabits={clearHabits} onClearTasks={clearTasks} onClearScholarships={clearScholarships} onClearNotes={clearNotes} onClearAll={clearAllData} onExport={exportData} storageEstimate={storageEstimate} />}
         </div>
       </main>
@@ -344,7 +422,7 @@ export default function Home() {
 }
 
 function Brand({ compact = false }: { compact?: boolean }) {
-  return <div className="flex items-center gap-2.5"><img src={logoUrl} alt="Super Tracker" className="h-10 w-10 rounded-xl object-contain" /><div className={compact ? "" : ""}><p className="font-serif text-[18px] font-bold leading-none tracking-[-0.03em] text-[#1e357b]">Super Tracker</p><p className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.22em] text-[#7e8796]">Caderno de Josélio</p></div></div>;
+  return <div className="flex items-center gap-2.5"><img src={logoUrl} alt="Logotipo do Super Tracker" className="h-11 w-11 rounded-xl object-contain" /><p className="font-serif text-[18px] font-bold leading-none tracking-[-0.03em] text-[#1e357b]">Super Tracker</p></div>;
 }
 
 function NavButton({ item, active, onClick }: { item: { id: View; label: string; icon: typeof LayoutDashboard }; active: boolean; onClick: () => void }) {
@@ -400,8 +478,8 @@ function MetricCard({ icon: Icon, label, value, note, accent }: { icon: typeof C
   return <div className="rounded-[22px] border border-[#dfe2d7] bg-white p-4 shadow-[0_10px_24px_rgba(36,48,80,0.04)]"><div className="flex items-center justify-between"><p className="text-xs font-bold text-[#6f7890]">{label}</p><span className={`grid h-8 w-8 place-items-center rounded-xl ${styles[accent]}`}><Icon className="h-4 w-4" /></span></div><p className="mt-3 font-serif text-3xl font-bold tracking-tight">{value}</p><p className="mt-1 text-xs text-[#8a92a0]">{note}</p></div>;
 }
 
-function StudyView({ sessionForm, setSessionForm, assessmentForm, setAssessmentForm, onSession, onAssessment, sessions, assessments, subjectStats, onClearSessions, onClearAssessments, onRemoveSession, onRemoveAssessment }: { sessionForm: { date: string; subject: string; minutes: string; topic: string; quality: string }; setSessionForm: React.Dispatch<React.SetStateAction<{ date: string; subject: string; minutes: string; topic: string; quality: string }>>; assessmentForm: { date: string; subject: string; type: string; score: string; total: string }; setAssessmentForm: React.Dispatch<React.SetStateAction<{ date: string; subject: string; type: string; score: string; total: string }>>; onSession: (event: React.FormEvent) => void; onAssessment: (event: React.FormEvent) => void; sessions: StudySession[]; assessments: Assessment[]; subjectStats: { subject: string; hours: number; grade: number | null }[]; onClearSessions: () => void; onClearAssessments: () => void; onRemoveSession: (id: string) => void; onRemoveAssessment: (id: string) => void }) {
-  return <div className="space-y-6"><PageHeading eyebrow="Registo diário" title="Estudo, notas e progresso" description="Regista o que fizeste hoje. Os dados ficam guardados no teu dispositivo e atualizam o Painel." />
+function StudyView({ sessionForm, setSessionForm, assessmentForm, setAssessmentForm, onSession, onAssessment, sessions, assessments, subjectStats, onClearSessions, onClearAssessments, onRemoveSession, onRemoveAssessment, timerDuration, timerRemaining, timerRunning, onTimerDuration, onToggleTimer, onResetTimer }: { sessionForm: { date: string; subject: string; minutes: string; topic: string; quality: string }; setSessionForm: React.Dispatch<React.SetStateAction<{ date: string; subject: string; minutes: string; topic: string; quality: string }>>; assessmentForm: { date: string; subject: string; type: string; score: string; total: string }; setAssessmentForm: React.Dispatch<React.SetStateAction<{ date: string; subject: string; type: string; score: string; total: string }>>; onSession: (event: React.FormEvent) => void; onAssessment: (event: React.FormEvent) => void; sessions: StudySession[]; assessments: Assessment[]; subjectStats: { subject: string; hours: number; grade: number | null }[]; onClearSessions: () => void; onClearAssessments: () => void; onRemoveSession: (id: string) => void; onRemoveAssessment: (id: string) => void; timerDuration: number; timerRemaining: number; timerRunning: boolean; onTimerDuration: (minutes: number) => void; onToggleTimer: () => void; onResetTimer: () => void }) {
+  return <div className="space-y-6"><PageHeading eyebrow="Registo diário" title="Estudo, notas e progresso" description="Regista o que fizeste hoje. Os dados ficam guardados no teu dispositivo e atualizam o Painel." /><StudyTimer duration={timerDuration} remaining={timerRemaining} running={timerRunning} onDuration={onTimerDuration} onToggle={onToggleTimer} onReset={onResetTimer} />
     <div className="grid gap-6 xl:grid-cols-[1.05fr_.95fr]">
       <form onSubmit={onSession} className="rounded-[26px] border border-[#dfe2d7] bg-white p-5 shadow-[0_12px_30px_rgba(36,48,80,0.05)] sm:p-6"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#e3ebff] text-[#2457c5]"><Plus className="h-5 w-5" /></span><div><p className="tag">Nova sessão</p><h2 className="font-serif text-xl font-bold">Registar estudo</h2></div></div><div className="mt-5 grid gap-3 sm:grid-cols-2"><Field label="Data"><Input type="date" value={sessionForm.date} onChange={(e) => setSessionForm((form) => ({ ...form, date: e.target.value }))} /></Field><Field label="Disciplina"><SubjectSelect value={sessionForm.subject} onChange={(subject) => setSessionForm((form) => ({ ...form, subject }))} /></Field><Field label="Minutos"><Input inputMode="numeric" value={sessionForm.minutes} onChange={(e) => setSessionForm((form) => ({ ...form, minutes: e.target.value }))} placeholder="45" /></Field><Field label="Qualidade"><Select value={sessionForm.quality} onValueChange={(quality) => setSessionForm((form) => ({ ...form, quality }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{[1,2,3,4,5].map((value) => <SelectItem key={value} value={String(value)}>{value} / 5</SelectItem>)}</SelectContent></Select></Field><div className="sm:col-span-2"><Field label="Tema ou tarefa"><Input value={sessionForm.topic} onChange={(e) => setSessionForm((form) => ({ ...form, topic: e.target.value }))} placeholder="Ex.: Exercícios de funções quadráticas" /></Field></div></div><Button className="mt-5 h-11 w-full rounded-xl bg-[#2457c5] font-bold hover:bg-[#193f98]"><BookOpen className="mr-2 h-4 w-4" />Guardar sessão</Button></form>
       <form onSubmit={onAssessment} className="rounded-[26px] border border-[#dfe2d7] bg-[#fffcf5] p-5 shadow-[0_12px_30px_rgba(36,48,80,0.05)] sm:p-6"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#fff0c8] text-[#a47400]"><Trophy className="h-5 w-5" /></span><div><p className="tag">Avaliação</p><h2 className="font-serif text-xl font-bold">Registar nota</h2></div></div><div className="mt-5 grid gap-3 sm:grid-cols-2"><Field label="Data"><Input type="date" value={assessmentForm.date} onChange={(e) => setAssessmentForm((form) => ({ ...form, date: e.target.value }))} /></Field><Field label="Disciplina"><SubjectSelect value={assessmentForm.subject} onChange={(subject) => setAssessmentForm((form) => ({ ...form, subject }))} /></Field><Field label="Tipo"><Select value={assessmentForm.type} onValueChange={(type) => setAssessmentForm((form) => ({ ...form, type }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["Teste","Prova trimestral","Exame","Trabalho","Projeto","Oral"].map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent></Select></Field><Field label="Nota obtida / máxima"><div className="flex gap-2"><Input inputMode="decimal" value={assessmentForm.score} onChange={(e) => setAssessmentForm((form) => ({ ...form, score: e.target.value }))} placeholder="15" /><Input inputMode="decimal" value={assessmentForm.total} onChange={(e) => setAssessmentForm((form) => ({ ...form, total: e.target.value }))} placeholder="20" /></div></Field></div><Button className="mt-5 h-11 w-full rounded-xl bg-[#ae7800] font-bold text-white hover:bg-[#8f6200]"><Trophy className="mr-2 h-4 w-4" />Guardar avaliação</Button></form>
@@ -426,6 +504,33 @@ function ScholarshipsView({ scholarships, form, setForm, onSubmit, onStatus, onR
       <div className="space-y-3">{scholarships.map((item) => <article key={item.id} className="rounded-[24px] border border-[#dfe2d7] bg-white p-5 shadow-[0_10px_25px_rgba(36,48,80,0.045)]"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2"><span className="tag">{item.country}</span><span className="rounded-full bg-[#eff4ff] px-2.5 py-1 text-[10px] font-extrabold text-[#2457c5]">{item.category}</span></div><h2 className="mt-2 font-serif text-2xl font-bold">{item.name}</h2></div><div className="flex items-center gap-2"><Select value={item.status} onValueChange={(status: Scholarship["status"]) => onStatus(item.id, status)}><SelectTrigger className="w-[165px] rounded-xl border-[#d6deef] text-xs font-bold"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Monitorizar">Monitorizar</SelectItem><SelectItem value="Em preparação">Em preparação</SelectItem><SelectItem value="Candidatura enviada">Candidatura enviada</SelectItem></SelectContent></Select><button type="button" title="Remover oportunidade" aria-label={`Remover oportunidade ${item.name}`} onClick={() => onRemove(item.id)} className="rounded-lg p-2 text-[#a14837] hover:bg-[#fff0eb]"><Trash2 className="h-4 w-4" /></button></div></div><p className="mt-3 text-sm leading-6 text-[#667085]">{item.note}</p><a href={item.source} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-xs font-extrabold text-[#2457c5] hover:text-[#193f98]">Abrir fonte oficial <ArrowUpRight className="h-3.5 w-3.5" /></a></article>)}</div>
     </section>
   </div>;
+}
+
+function StudyTimer({ duration, remaining, running, onDuration, onToggle, onReset }: { duration: number; remaining: number; running: boolean; onDuration: (minutes: number) => void; onToggle: () => void; onReset: () => void }) {
+  const minutes = Math.floor(remaining / 60).toString().padStart(2, "0");
+  const seconds = (remaining % 60).toString().padStart(2, "0");
+  return <section className="rounded-[26px] border border-[#d7e0f7] bg-[#eef3ff] p-5 shadow-[0_12px_30px_rgba(36,87,197,0.08)] sm:p-6"><div className="flex flex-wrap items-center justify-between gap-4"><div><p className="tag text-[#2457c5]">Foco e descanso</p><h2 className="mt-1 font-serif text-2xl font-bold">Contador de estudo</h2><p className="mt-1 text-sm text-[#5f6f93]">Define o tempo e recebe um aviso quando terminar.</p></div><div className="flex items-center gap-2 rounded-2xl bg-white px-4 py-3"><AlarmClock className="h-5 w-5 text-[#2457c5]" /><span className="font-mono text-3xl font-bold tracking-wider text-[#193f98]">{minutes}:{seconds}</span></div></div><div className="mt-5 flex flex-wrap items-end gap-3"><Field label="Duração (minutos)"><Input type="number" min="1" max="180" value={duration} onChange={(event) => onDuration(Number(event.target.value) || 1)} className="w-32 bg-white" /></Field><Button type="button" onClick={onToggle} className="h-10 rounded-xl bg-[#2457c5] font-bold hover:bg-[#193f98]">{running ? <><Pause className="mr-1.5 h-4 w-4" />Pausar</> : <><Play className="mr-1.5 h-4 w-4" />Iniciar</>}</Button><Button type="button" onClick={onReset} variant="outline" className="h-10 rounded-xl bg-white font-bold"><RotateCcw className="mr-1.5 h-4 w-4" />Reiniciar</Button></div></section>;
+}
+
+function TutorsView({ tutors, form, setForm, onSubmit, onUpdate, onRemove }: { tutors: Tutor[]; form: { name: string; role: string; phone: string; email: string; subject: string; notes: string }; setForm: React.Dispatch<React.SetStateAction<{ name: string; role: string; phone: string; email: string; subject: string; notes: string }>>; onSubmit: (event: React.FormEvent) => void; onUpdate: (id: string, changes: Omit<Tutor, "id">) => boolean; onRemove: (id: string) => void }) {
+  const [query, setQuery] = useState("");
+  const filteredTutors = tutors.filter((tutor) => `${tutor.name} ${tutor.role} ${tutor.subject} ${tutor.phone} ${tutor.email}`.toLowerCase().includes(query.toLowerCase()));
+  const editTutor = (tutor: Tutor) => {
+    const name = window.prompt("Nome do tutor", tutor.name);
+    if (name === null) return;
+    const role = window.prompt("Função", tutor.role);
+    if (role === null) return;
+    const phone = window.prompt("Telefone", tutor.phone);
+    if (phone === null) return;
+    const email = window.prompt("E-mail", tutor.email);
+    if (email === null) return;
+    const subject = window.prompt("Disciplina ou área", tutor.subject);
+    if (subject === null) return;
+    const notes = window.prompt("Notas", tutor.notes);
+    if (notes === null) return;
+    onUpdate(tutor.id, { name, role, phone, email, subject, notes });
+  };
+  return <div className="space-y-6"><PageHeading eyebrow="Rede de apoio" title="Tutores" description="Guarda os contactos das pessoas que acompanham o teu estudo, orientação universitária e preparação para bolsas." /><div className="grid gap-6 xl:grid-cols-[.78fr_1.22fr]"><form onSubmit={onSubmit} className="rounded-[26px] border border-[#dfe2d7] bg-white p-5 shadow-[0_12px_30px_rgba(36,48,80,0.05)] sm:p-6"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#e3f2e7] text-[#287044]"><UserRound className="h-5 w-5" /></span><div><p className="tag text-[#287044]">Novo contacto</p><h2 className="font-serif text-xl font-bold">Adicionar tutor</h2></div></div><div className="mt-5 space-y-3"><Field label="Nome"><Input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Nome completo" /></Field><Field label="Função"><Input value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))} placeholder="Professor, mentor, explicador..." /></Field><div className="grid gap-3 sm:grid-cols-2"><Field label="Telefone"><Input type="tel" value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} placeholder="+244 ..." /></Field><Field label="E-mail"><Input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="email@exemplo.com" /></Field></div><Field label="Disciplina ou área"><Input value={form.subject} onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))} placeholder="Matemática, bolsas, universidade..." /></Field><Field label="Notas"><textarea value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} className="min-h-24 w-full resize-y rounded-xl border border-[#d8deea] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#2457c5]" placeholder="Horário de atendimento ou observações" /></Field></div><Button className="mt-5 h-11 w-full rounded-xl bg-[#287044] font-bold hover:bg-[#1e5a35]"><Plus className="mr-2 h-4 w-4" />Guardar contacto</Button></form><section className="rounded-[26px] border border-[#dfe2d7] bg-white p-5 shadow-[0_12px_30px_rgba(36,48,80,0.05)] sm:p-6"><div className="flex items-center justify-between gap-3"><div><p className="tag">Contactos guardados</p><h2 className="mt-1 font-serif text-2xl font-bold">A tua rede de apoio</h2></div><span className="rounded-full bg-[#e9f4eb] px-3 py-1.5 text-xs font-bold text-[#287044]">{tutors.length} {tutors.length === 1 ? "contacto" : "contactos"}</span></div><div className="relative mt-5"><Search className="absolute left-3 top-2.5 h-4 w-4 text-[#8b94a4]" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar tutores" className="pl-9" /></div><div className="mt-4 space-y-3">{filteredTutors.map((tutor) => <article key={tutor.id} className="rounded-2xl border border-[#e4e8df] bg-[#fffefb] p-4"><div className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e3f2e7] text-[#287044]"><UserRound className="h-4 w-4" /></span><div className="min-w-0 flex-1"><h3 className="font-serif text-xl font-bold">{tutor.name}</h3><p className="text-xs font-bold text-[#6c788e]">{tutor.role}{tutor.subject ? ` · ${tutor.subject}` : ""}</p><div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-[#52617a]">{tutor.phone && <a href={`tel:${tutor.phone}`} className="inline-flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{tutor.phone}</a>}{tutor.email && <a href={`mailto:${tutor.email}`} className="inline-flex items-center gap-1 break-all"><ArrowUpRight className="h-3.5 w-3.5" />{tutor.email}</a>}</div>{tutor.notes && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#657188]">{tutor.notes}</p>}</div><div className="flex shrink-0 items-center gap-1"><button type="button" title="Editar tutor" aria-label={`Editar tutor ${tutor.name}`} onClick={() => editTutor(tutor)} className="rounded-lg p-2 text-[#2457c5] hover:bg-[#edf2ff]"><Pencil className="h-4 w-4" /></button><button type="button" title="Remover tutor" aria-label={`Remover tutor ${tutor.name}`} onClick={() => onRemove(tutor.id)} className="rounded-lg p-2 text-[#a14837] hover:bg-[#fff0eb]"><Trash2 className="h-4 w-4" /></button></div></div></article>)}{!filteredTutors.length && <EmptyState icon={UserRound} text={query ? "Nenhum tutor corresponde à pesquisa." : "Ainda não adicionaste tutores. Guarda aqui os teus contactos de apoio."} />}</div></section></div></div>;
 }
 
 function MoreView({ section, setSection, habits, onToggleHabit, habitRate, notes, noteForm, setNoteForm, onAddNote, onToggleNotePin, onUpdateNote, onRemoveNote, onClearHabits, onClearTasks, onClearScholarships, onClearNotes, onClearAll, onExport, storageEstimate }: { section: "calendário" | "hábitos" | "currículo" | "notas"; setSection: (section: "calendário" | "hábitos" | "currículo" | "notas") => void; habits: Record<string, boolean>; onToggleHabit: (habit: string) => void; habitRate: number; notes: Note[]; noteForm: { title: string; content: string; subject: string }; setNoteForm: React.Dispatch<React.SetStateAction<{ title: string; content: string; subject: string }>>; onAddNote: (event: React.FormEvent) => void; onToggleNotePin: (id: string) => void; onUpdateNote: (id: string, changes: Pick<Note, "title" | "content" | "subject">) => boolean; onRemoveNote: (id: string) => void; onClearHabits: () => void; onClearTasks: () => void; onClearScholarships: () => void; onClearNotes: () => void; onClearAll: () => void; onExport: () => void; storageEstimate: StorageEstimate }) {

@@ -1,7 +1,7 @@
 {
-  "name": "Super Tracker do Josélio",
+  "name": "Super Tracker Académico",
   "short_name": "Super Tracker",
-  "description": "Estudo, universidade, bolsas e hábitos num só lugar.",
+  "description": "Estudo, universidade, bolsas, tutores e hábitos num só lugar.",
   "lang": "pt-PT",
   "start_url": "./",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "theme_color": "#2457C5",
   "icons": [
     {
-      "src": "./assets/super-tracker-logo.png",
+      "src": "./logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

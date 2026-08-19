@@ -13,7 +13,7 @@ Object.defineProperty(globalThis, "localStorage", {
   configurable: true,
 });
 
-const fallback = { sessions: [], notes: [], habits: {}, version: 1 };
+const fallback = { sessions: [], notes: [], tutors: [], timer: { duration: 45, remaining: 45 * 60, running: false, endsAt: null }, habits: {}, version: 1 };
 
 describe("offlineStorage", () => {
   beforeEach(async () => {
@@ -28,14 +28,14 @@ describe("offlineStorage", () => {
 
   it("migra dados legados sem perder os valores predefinidos", () => {
     const migrated = mergeLegacyTrackerData(fallback, JSON.stringify({ sessions: [{ id: "legacy-1" }] }));
-    expect(migrated).toEqual({ sessions: [{ id: "legacy-1" }], notes: [], habits: {}, version: 1 });
+    expect(migrated).toEqual({ sessions: [{ id: "legacy-1" }], notes: [], tutors: [], timer: { duration: 45, remaining: 45 * 60, running: false, endsAt: null }, habits: {}, version: 1 });
   });
 
   it("migra localStorage e preserva os dados após gravar e recarregar", async () => {
     legacyStorage.set("joselio-super-tracker-v1", JSON.stringify({ sessions: [{ id: "legacy-1" }] }));
-    await expect(loadTrackerData(fallback)).resolves.toEqual({ sessions: [{ id: "legacy-1" }], notes: [], habits: {}, version: 1 });
+    await expect(loadTrackerData(fallback)).resolves.toEqual({ sessions: [{ id: "legacy-1" }], notes: [], tutors: [], timer: { duration: 45, remaining: 45 * 60, running: false, endsAt: null }, habits: {}, version: 1 });
 
-    const saved = { ...fallback, sessions: [{ id: "indexed-1" }], notes: [{ id: "note-1", title: "Revisão", content: "Rever funções", subject: "Matemática", pinned: true }] };
+    const saved = { ...fallback, sessions: [{ id: "indexed-1" }], notes: [{ id: "note-1", title: "Revisão", content: "Rever funções", subject: "Matemática", pinned: true }], tutors: [{ id: "tutor-1", name: "Prof. Ana" }], timer: { duration: 50, remaining: 2870, running: true, endsAt: Date.now() + 2870000 } };
     await saveTrackerData(saved);
     await expect(loadTrackerData(fallback)).resolves.toEqual(saved);
   });
