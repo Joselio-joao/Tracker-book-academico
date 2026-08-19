@@ -48,3 +48,12 @@
 
 - [x] Publicar no GitHub Pages a atualização do bloco de notas e das remoções individuais, usando o repositório Tracker-book-academico como destino final.
 - [x] Confirmar no URL público que a nova versão do GitHub Pages está disponível.
+
+- [x] Substituir “Caderno de Josélio” pelo logotipo fornecido e atualizar os metadados visuais da PWA.
+- [x] Criar aba Tutores com contactos persistentes, adicionar, editar, pesquisar e remover individualmente.
+- [x] Adicionar contador de estudo com duração configurável, pausa/reinício, conclusão e despertador local persistente.
+- [x] Testar as novas funções offline e publicar a atualização diretamente no GitHub Pages.
+
+- [x] Adicionar pesquisa e edição de contactos de tutores existentes.
+- [x] Persistir o estado do contador/despertador e restaurá-lo depois de recarregar a PWA.
+- [x] Criar cobertura de testes para tutores e temporizador e publicar/verificar a nova versão no GitHub Pages. Build, TypeScript e 9 testes passaram; GitHub Actions concluído com sucesso para 2dac6a7; URL público confirmou logo, Tutores, contador e ausência do nome antigo.
