@@ -1,4 +1,4 @@
-const CACHE_NAME = "super-tracker-shell-v3";
+const CACHE_NAME = "super-tracker-shell-v5";
 const APP_SHELL = [new URL("./", self.registration.scope).href];
 
 self.addEventListener("install", (event) => {
@@ -18,16 +18,17 @@ self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
   const shellUrl = new URL("./", self.registration.scope).href;
+  const shouldPreferNetwork = event.request.mode === "navigate" || ["script", "style", "manifest"].includes(event.request.destination);
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        }
-        return response;
-      }).catch(() => caches.match(shellUrl));
-    }),
+    (shouldPreferNetwork
+      ? fetch(event.request).then((response) => {
+          if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+          return response;
+        }).catch(() => caches.match(event.request).then((cached) => cached || caches.match(shellUrl)))
+      : caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
+          if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+          return response;
+        }).catch(() => caches.match(shellUrl)))
+    ),
   );
 });
