@@ -58,6 +58,10 @@
 - [x] Persistir o estado do contador/despertador e restaurá-lo depois de recarregar a PWA.
 - [x] Criar cobertura de testes para tutores e temporizador e publicar/verificar a nova versão no GitHub Pages. Build, TypeScript e 9 testes passaram; GitHub Actions concluído com sucesso para 2dac6a7; URL público confirmou logo, Tutores, contador e ausência do nome antigo.
 
-- [ ] Diagnosticar por que o GitHub Pages/iPhone ainda apresenta a versão antiga.
-- [ ] Atualizar a versão do service worker e forçar a invalidação da cache pública.
-- [ ] Confirmar no URL público a nova marca, aba Tutores e contador após a atualização.
+- [x] Diagnosticar por que o GitHub Pages/iPhone ainda apresenta a versão antiga.
+- [x] Atualizar a versão do service worker e forçar a invalidação da cache pública.
+- [x] Confirmar no URL público a nova marca, aba Tutores e contador após a atualização.
+
+- [ ] Definir proteção de acesso do GitHub Pages sem confundir link não listado com autenticação real.
+- [ ] Implementar a proteção escolhida e manter os dados académicos locais/offline.
+- [ ] Testar acesso autorizado, acesso sem o segredo e funcionamento offline após desbloqueio.
