@@ -62,6 +62,15 @@
 - [x] Atualizar a versão do service worker e forçar a invalidação da cache pública.
 - [x] Confirmar no URL público a nova marca, aba Tutores e contador após a atualização.
 
-- [ ] Definir proteção de acesso do GitHub Pages sem confundir link não listado com autenticação real.
-- [ ] Implementar a proteção escolhida e manter os dados académicos locais/offline.
-- [ ] Testar acesso autorizado, acesso sem o segredo e funcionamento offline após desbloqueio.
+- [x] Definir proteção de acesso do GitHub Pages sem confundir link não listado com autenticação real.
+- [x] Implementar a proteção escolhida e manter os dados académicos locais/offline.
+- [x] Testar acesso autorizado, acesso sem o segredo e funcionamento offline após desbloqueio.
+
+- [ ] Confirmar conta Cloudflare, domínio/subdomínio disponível e método de autenticação pretendido.
+- [ ] Ligar o repositório Tracker-book-academico ao Cloudflare Pages com deploy automático da branch main.
+- [ ] Configurar Cloudflare Access gratuito e testar o endereço protegido antes de desativar o GitHub Pages.
+
+- [ ] Configurar Supabase Auth com URL do projeto e chave pública anon, sem incluir service role ou segredos no frontend.
+- [ ] Adicionar ecrã de login/logout e bloquear a aplicação quando não houver sessão autenticada.
+- [ ] Confirmar que sessões, notas, tutores e progresso continuam apenas no IndexedDB/OPFS local.
+- [ ] Testar autenticação, bloqueio, logout e reabertura offline; publicar no GitHub Pages.
