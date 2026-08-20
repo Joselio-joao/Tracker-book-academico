@@ -7,7 +7,7 @@ import { Route, Router as WouterRouter, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
-import { supabase } from "./lib/supabase";
+import { getPersistedSupabaseSession, supabase } from "./lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 
 
@@ -61,9 +61,30 @@ function AuthGate({ children }: { children: ReactNode }) {
   const [checking, setChecking] = useState(true);
   useEffect(() => {
     let active = true;
-    void supabase.auth.getSession().then(({ data }) => { if (active) { setSession(data.session); setChecking(false); } });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
-    return () => { active = false; listener.subscription.unsubscribe(); };
+    const persisted = getPersistedSupabaseSession();
+    if (!navigator.onLine && persisted) {
+      setSession(persisted);
+      setChecking(false);
+    }
+    const timeout = window.setTimeout(() => {
+      if (active) {
+        setSession((current) => current ?? getPersistedSupabaseSession());
+        setChecking(false);
+      }
+    }, 2500);
+    void supabase.auth.getSession().then(({ data }) => {
+      if (active) {
+        setSession(data.session ?? persisted);
+        setChecking(false);
+      }
+    }).catch(() => {
+      if (active) {
+        setSession(getPersistedSupabaseSession());
+        setChecking(false);
+      }
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession ?? getPersistedSupabaseSession()));
+    return () => { active = false; window.clearTimeout(timeout); listener.subscription.unsubscribe(); };
   }, []);
   if (checking) return <div className="grid min-h-screen place-items-center bg-[#f8f6ef] text-[#274592]">A verificar a sessão…</div>;
   if (!session) return <LoginScreen />;

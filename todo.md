@@ -70,7 +70,11 @@
 - [ ] Ligar o repositório Tracker-book-academico ao Cloudflare Pages com deploy automático da branch main.
 - [ ] Configurar Cloudflare Access gratuito e testar o endereço protegido antes de desativar o GitHub Pages.
 
-- [ ] Configurar Supabase Auth com URL do projeto e chave pública anon, sem incluir service role ou segredos no frontend.
-- [ ] Adicionar ecrã de login/logout e bloquear a aplicação quando não houver sessão autenticada.
-- [ ] Confirmar que sessões, notas, tutores e progresso continuam apenas no IndexedDB/OPFS local.
-- [ ] Testar autenticação, bloqueio, logout e reabertura offline; publicar no GitHub Pages.
+- [x] Configurar Supabase Auth com URL do projeto e chave pública anon, sem incluir service role ou segredos no frontend.
+- [x] Adicionar ecrã de login/logout e bloquear a aplicação quando não houver sessão autenticada.
+- [x] Confirmar que sessões, notas, tutores e progresso continuam apenas no IndexedDB/OPFS local.
+- [ ] Testar autenticação, bloqueio, logout e reabertura offline; publicação no GitHub Pages concluída no workflow `3242645` e bundle público contém login/logout.
+
+- [ ] Corrigir o ecrã branco sem Internet depois do login Supabase.
+- [ ] Permitir fallback offline com sessão local persistida, sem depender da rede para renderizar a aplicação.
+- [ ] Testar novamente online/offline e publicar a correção no GitHub Pages.
