@@ -75,6 +75,10 @@
 - [x] Confirmar que sessões, notas, tutores e progresso continuam apenas no IndexedDB/OPFS local.
 - [ ] Testar autenticação, bloqueio, logout e reabertura offline; publicação no GitHub Pages concluída no workflow `3242645` e bundle público contém login/logout.
 
-- [ ] Corrigir o ecrã branco sem Internet depois do login Supabase.
-- [ ] Permitir fallback offline com sessão local persistida, sem depender da rede para renderizar a aplicação.
-- [ ] Testar novamente online/offline e publicar a correção no GitHub Pages.
+- [x] Corrigir o ecrã branco sem Internet depois do login Supabase.
+- [x] Permitir fallback offline com sessão local persistida, sem depender da rede para renderizar a aplicação.
+- [ ] Testar novamente online/offline e publicar a correção no GitHub Pages. Build, TypeScript, 11 testes e publicação GitHub Pages concluídos; falta confirmar no iPhone sem rede.
+
+- [ ] Corrigir o shell offline da PWA para que HTML, JavaScript, CSS, logo e service worker sejam carregados sem rede no iPhone.
+- [ ] Evitar que a verificação Supabase bloqueie o primeiro render quando não houver Internet.
+- [ ] Atualizar a cache pública, testar novamente no iPhone e confirmar que o ecrã deixa de ficar branco.
