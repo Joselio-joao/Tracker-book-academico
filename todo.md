@@ -87,7 +87,10 @@
 - [x] Adicionar testes para abrir ficheiros suportados e manter ficheiros existentes intactos.
 - [ ] Validar visualização responsiva no iPhone e publicar a atualização.
 
-- [ ] Preparar exportação seletiva dos dados locais para uma cópia de segurança, sem apagar o armazenamento do iPhone.
-- [ ] Implementar envio manual para o repositório GitHub privado através de servidor protegido, sem expor o token no cliente.
-- [ ] Adicionar configuração segura do caminho/ficheiro de backup e mensagens claras de sucesso ou erro.
-- [ ] Testar falhas de rede, autorização e preservação local antes de publicar a sincronização.
+- [x] Preparar exportação seletiva dos dados locais para uma cópia de segurança, sem apagar o armazenamento do iPhone.
+- [x] Implementar envio manual para o repositório GitHub privado através de servidor protegido, sem expor o token no cliente.
+- [x] Adicionar configuração segura do caminho/ficheiro de backup e mensagens claras de sucesso ou erro.
+- [x] Testar falhas de rede, autorização e preservação local antes de publicar a sincronização, com testes unitários e HTTP locais.
+- [ ] Confirmar o primeiro POST real pelo botão do iPhone e verificar a criação/atualização do ficheiro de backup no repositório privado.
+- [x] Cobrir falhas de rede e respostas 4xx/5xx no botão, mantendo os dados locais intactos.
+- [x] Cobrir sessão ausente/inválida e e-mail não autorizado no endpoint protegido.

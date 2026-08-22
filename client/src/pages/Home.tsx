@@ -37,6 +37,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { clearTrackerSection, confirmDestructiveAction } from "@/lib/trackerData";
 import { supabase } from "@/lib/supabase";
+import { sendGitHubBackup } from "@/lib/githubBackup";
 import { estimateStorage, getLargeFilePreviewKind, loadLargeFileMetadata, loadTrackerData, readLargeFile, removeLargeFile, saveLargeFile, saveLargeFileMetadata, saveTrackerData, type PreviewKind, type StorageEstimate, type StoredFileMetadata } from "@/lib/offlineStorage";
 
 const logoUrl = "./logo.png";
@@ -323,13 +324,7 @@ export default function Home() {
     try {
       const { data: authData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !authData.session) throw new Error("A sessão expirou. Entra novamente antes de fazer o backup.");
-      const response = await fetch(githubBackupEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authData.session.access_token}` },
-        body: JSON.stringify({ data, exportedAt: new Date().toISOString() }),
-      });
-      const result = await response.json().catch(() => ({})) as { error?: string; path?: string };
-      if (!response.ok) throw new Error(result.error || "O servidor não aceitou o backup.");
+      const result = await sendGitHubBackup(githubBackupEndpoint, authData.session.access_token, data);
       setBackupStatus(`Backup atualizado em ${result.path || "backups/super-tracker-joselio-latest.json"}.`);
       toast.success("Backup enviado para o GitHub privado.");
     } catch (error) {

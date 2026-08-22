@@ -43,11 +43,11 @@ function isRateLimited(request: express.Request) {
   return current.count > 5;
 }
 
-async function verifySupabaseSession(accessToken: string) {
+async function verifySupabaseSession(accessToken: string, fetcher: typeof fetch) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL?.replace(/\/+$/, "");
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) return { configured: false, email: null };
-  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+  const response = await fetcher(`${supabaseUrl}/auth/v1/user`, {
     headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${accessToken}` },
   });
   if (!response.ok) return { configured: true, email: null };
@@ -55,16 +55,15 @@ async function verifySupabaseSession(accessToken: string) {
   return { configured: true, email: user.email?.trim().toLowerCase() || null };
 }
 
-async function githubRequest(url: string, init: RequestInit, token: string) {
-  return fetch(url, {
+async function githubRequest(url: string, init: RequestInit, token: string, fetcher: typeof fetch) {
+  return fetcher(url, {
     ...init,
     headers: { ...GITHUB_API_HEADERS, Authorization: `Bearer ${token}`, ...(init.headers || {}) },
   });
 }
 
-async function startServer() {
+export function createApp(externalFetch: typeof fetch = fetch) {
   const app = express();
-  const server = createServer(app);
   app.use(express.json({ limit: "1mb" }));
 
   app.options("/api/github/backup", (req, res) => {
@@ -79,14 +78,16 @@ async function startServer() {
     if (isRateLimited(req)) return res.status(429).json({ error: "Aguarda um minuto antes de enviar outro backup." });
 
     const accessToken = req.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+    if (!accessToken) return res.status(401).json({ error: "É necessária uma sessão autenticada para fazer o backup." });
     const githubToken = process.env.GITHUB_BACKUP_TOKEN;
     const allowedEmail = process.env.GITHUB_BACKUP_ALLOWED_EMAIL?.trim().toLowerCase();
-    if (!accessToken || !githubToken || !allowedEmail) return res.status(503).json({ error: "Backup ainda não está configurado no servidor." });
+    if (!githubToken || !allowedEmail) return res.status(503).json({ error: "Backup ainda não está configurado no servidor." });
 
     try {
-      const auth = await verifySupabaseSession(accessToken);
+      const auth = await verifySupabaseSession(accessToken, externalFetch);
       if (!auth.configured) return res.status(503).json({ error: "A autenticação do backup não está configurada." });
-      if (!auth.email || auth.email !== allowedEmail) return res.status(403).json({ error: "Esta conta não está autorizada a enviar backups." });
+      if (!auth.email) return res.status(401).json({ error: "A sessão é inválida ou expirou. Entra novamente." });
+      if (auth.email !== allowedEmail) return res.status(403).json({ error: "Esta conta não está autorizada a enviar backups." });
 
       const data = req.body?.data;
       if (!data || typeof data !== "object" || Array.isArray(data)) return res.status(400).json({ error: "Dados de backup inválidos." });
@@ -99,7 +100,7 @@ async function startServer() {
       const serialized = JSON.stringify(backup, null, 2);
       const encoded = Buffer.from(serialized, "utf8").toString("base64");
       const contentUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPOSITORY}/contents/${GITHUB_BACKUP_PATH}`;
-      const existing = await githubRequest(contentUrl, { method: "GET" }, githubToken);
+      const existing = await githubRequest(contentUrl, { method: "GET" }, githubToken, externalFetch);
       let sha: string | undefined;
       if (existing.ok) {
         const current = await existing.json() as { sha?: string };
@@ -112,7 +113,7 @@ async function startServer() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: "Atualizar backup do Super Tracker", content: encoded, branch: "main", ...(sha ? { sha } : {}) }),
-      }, githubToken);
+      }, githubToken, externalFetch);
       if (!githubResponse.ok) return res.status(502).json({ error: "O GitHub recusou a atualização do backup." });
       const result = await githubResponse.json() as { commit?: { sha?: string } };
       return res.json({ ok: true, path: GITHUB_BACKUP_PATH, commit: result.commit?.sha || null, exportedAt: backup.exportedAt });
@@ -133,10 +134,16 @@ async function startServer() {
     res.sendFile(path.join(staticPath, "index.html"));
   });
 
+  return app;
+}
+
+export async function startServer() {
+  const app = createApp();
+  const server = createServer(app);
   const port = process.env.PORT || 3000;
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
 }
 
-startServer().catch(console.error);
+if (process.env.NODE_ENV !== "test" && !process.env.VITEST) startServer().catch(console.error);
