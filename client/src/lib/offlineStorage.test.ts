@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { indexedDB } from "fake-indexeddb";
-import { clearStoredTrackerData, loadLargeFileMetadata, loadTrackerData, mergeLegacyTrackerData, saveTrackerData } from "./offlineStorage";
+import { clearStoredTrackerData, getLargeFilePreviewKind, loadLargeFileMetadata, loadTrackerData, mergeLegacyTrackerData, readLargeFile, saveLargeFileMetadata, saveTrackerData } from "./offlineStorage";
 
 const legacyStorage = new Map<string, string>();
 Object.defineProperty(globalThis, "indexedDB", { value: indexedDB, configurable: true });
@@ -52,5 +52,48 @@ describe("offlineStorage", () => {
 
   it("devolve uma lista vazia de metadados OPFS quando o armazenamento ainda não existe", async () => {
     await expect(loadLargeFileMetadata()).resolves.toEqual([]);
+  });
+
+  it("lê PDFs e imagens existentes sem os alterar nem apagar os metadados", async () => {
+    const originalStorage = (navigator as Navigator & { storage?: unknown }).storage;
+    const savedPdf = new File(["conteúdo-pdf"], "plano.pdf", { type: "application/pdf" });
+    const savedImage = new File(["conteúdo-imagem"], "foto.png", { type: "image/png" });
+    const files = new Map([["plano.pdf", savedPdf], ["foto.png", savedImage]]);
+    const metadata = [
+      { name: "plano.pdf", size: savedPdf.size, type: savedPdf.type, updatedAt: 1 },
+      { name: "foto.png", size: savedImage.size, type: savedImage.type, updatedAt: 2 },
+    ];
+    const directory = {
+      getFileHandle: async (name: string) => ({ getFile: async () => files.get(name) }),
+    };
+    Object.defineProperty(navigator, "storage", { configurable: true, value: { getDirectory: async () => directory } });
+    try {
+      await saveLargeFileMetadata(metadata);
+      await expect(readLargeFile("plano.pdf")).resolves.toBe(savedPdf);
+      await expect(readLargeFile("foto.png")).resolves.toBe(savedImage);
+      await expect(savedPdf.text()).resolves.toBe("conteúdo-pdf");
+      await expect(savedImage.text()).resolves.toBe("conteúdo-imagem");
+      await expect(loadLargeFileMetadata()).resolves.toEqual(metadata);
+    } finally {
+      Object.defineProperty(navigator, "storage", { configurable: true, value: originalStorage });
+    }
+  });
+
+  it("classifica os formatos suportados pelo visualizador", () => {
+    expect(getLargeFilePreviewKind("application/pdf", "documento.bin")).toBe("pdf");
+    expect(getLargeFilePreviewKind("", "documento.pdf")).toBe("pdf");
+    expect(getLargeFilePreviewKind("image/jpeg", "foto.jpg")).toBe("image");
+    expect(getLargeFilePreviewKind("application/zip", "arquivo.zip")).toBe("other");
+  });
+
+  it("devolve nulo quando o ficheiro OPFS já não existe", async () => {
+    const originalStorage = (navigator as Navigator & { storage?: unknown }).storage;
+    const directory = { getFileHandle: async () => { throw new DOMException("Ficheiro não encontrado", "NotFoundError"); } };
+    Object.defineProperty(navigator, "storage", { configurable: true, value: { getDirectory: async () => directory } });
+    try {
+      await expect(readLargeFile("apagado.pdf")).resolves.toBeNull();
+    } finally {
+      Object.defineProperty(navigator, "storage", { configurable: true, value: originalStorage });
+    }
   });
 });

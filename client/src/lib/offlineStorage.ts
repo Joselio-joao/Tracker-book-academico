@@ -143,6 +143,28 @@ export async function removeLargeFile(fileName: string): Promise<boolean> {
   return true;
 }
 
+/** Reads a previously saved OPFS file without changing or deleting it. */
+export async function readLargeFile(fileName: string): Promise<File | null> {
+  const storage = navigator.storage as unknown as { getDirectory?: () => Promise<FileSystemDirectoryHandle> };
+  if (!storage.getDirectory) return null;
+  const root = await storage.getDirectory();
+  try {
+    const handle = await root.getFileHandle(fileName);
+    return await handle.getFile();
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "NotFoundError") return null;
+    throw error;
+  }
+}
+
+export type PreviewKind = "image" | "pdf" | "other";
+
+export function getLargeFilePreviewKind(type: string, fileName: string): PreviewKind {
+  if (type.startsWith("image/")) return "image";
+  if (type === "application/pdf" || fileName.toLowerCase().endsWith(".pdf")) return "pdf";
+  return "other";
+}
+
 export type StoredFileMetadata = { name: string; size: number; type: string; updatedAt: number };
 
 export async function loadLargeFileMetadata(): Promise<StoredFileMetadata[]> {

@@ -82,3 +82,7 @@
 - [ ] Corrigir o shell offline da PWA para que HTML, JavaScript, CSS, logo e service worker sejam carregados sem rede no iPhone.
 - [ ] Evitar que a verificação Supabase bloqueie o primeiro render quando não houver Internet.
 - [ ] Atualizar a cache pública, testar novamente no iPhone e confirmar que o ecrã deixa de ficar branco.
+
+- [x] Adicionar visualização offline de imagens e PDFs já guardados, sem apagar nem migrar destrutivamente os ficheiros existentes.
+- [x] Adicionar testes para abrir ficheiros suportados e manter ficheiros existentes intactos.
+- [ ] Validar visualização responsiva no iPhone e publicar a atualização.
