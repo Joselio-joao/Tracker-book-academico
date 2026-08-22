@@ -13,7 +13,9 @@ describe("githubBackup", () => {
   it("envia o payload com a sessão e devolve a resposta de sucesso", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ ok: true, path: "backups/file.json" }), { status: 200 }));
     await expect(sendGitHubBackup("https://backup.example/api", "session-token", data, fetcher)).resolves.toEqual({ ok: true, path: "backups/file.json" });
-    expect(fetcher).toHaveBeenCalledWith("https://backup.example/api", expect.objectContaining({ method: "POST", headers: expect.objectContaining({ Authorization: "Bearer session-token" }) }));
+    const request = fetcher.mock.calls[0]?.[1];
+    expect(request).toMatchObject({ method: "POST", headers: { "Content-Type": "text/plain" } });
+    expect(JSON.parse(String(request?.body))).toMatchObject({ accessToken: "session-token", data });
   });
 
   it("converte respostas 4xx/5xx em mensagens sem tocar nos dados", async () => {

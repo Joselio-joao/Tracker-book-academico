@@ -16,8 +16,11 @@ export async function sendGitHubBackup<T>(endpoint: string, accessToken: string,
   try {
     response = await fetcher(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-      body: JSON.stringify(createGitHubBackupPayload(data)),
+      // text/plain is a CORS-safelisted content type, so Safari can send the
+      // request without a preflight. The token remains inside the HTTPS body,
+      // never in the URL or in the public bundle.
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ ...createGitHubBackupPayload(data), accessToken }),
     });
   } catch {
     throw new Error("Não foi possível contactar o servidor de backup. Verifica a ligação à Internet.");

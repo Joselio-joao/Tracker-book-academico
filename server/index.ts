@@ -65,6 +65,7 @@ async function githubRequest(url: string, init: RequestInit, token: string, fetc
 export function createApp(externalFetch: typeof fetch = fetch) {
   const app = express();
   app.use(express.json({ limit: "1mb" }));
+  app.use("/api/github/backup", express.text({ type: "text/plain", limit: "1mb" }));
 
   app.options("/api/github/backup", (req, res) => {
     setBackupCors(req, res);
@@ -77,7 +78,14 @@ export function createApp(externalFetch: typeof fetch = fetch) {
     if (!isAllowedOrigin(req.get("origin"))) return res.status(403).json({ error: "Origem não autorizada." });
     if (isRateLimited(req)) return res.status(429).json({ error: "Aguarda um minuto antes de enviar outro backup." });
 
-    const accessToken = req.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+    let requestBody: { data?: unknown; exportedAt?: unknown; accessToken?: unknown } = {};
+    try {
+      requestBody = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
+    } catch {
+      return res.status(400).json({ error: "Dados de backup inválidos." });
+    }
+    const accessToken = req.get("authorization")?.replace(/^Bearer\s+/i, "").trim()
+      || (typeof requestBody.accessToken === "string" ? requestBody.accessToken.trim() : "");
     if (!accessToken) return res.status(401).json({ error: "É necessária uma sessão autenticada para fazer o backup." });
     const githubToken = process.env.GITHUB_BACKUP_TOKEN;
     const allowedEmail = process.env.GITHUB_BACKUP_ALLOWED_EMAIL?.trim().toLowerCase();
@@ -89,12 +97,12 @@ export function createApp(externalFetch: typeof fetch = fetch) {
       if (!auth.email) return res.status(401).json({ error: "A sessão é inválida ou expirou. Entra novamente." });
       if (auth.email !== allowedEmail) return res.status(403).json({ error: "Esta conta não está autorizada a enviar backups." });
 
-      const data = req.body?.data;
+      const data = requestBody.data;
       if (!data || typeof data !== "object" || Array.isArray(data)) return res.status(400).json({ error: "Dados de backup inválidos." });
       const backup = {
         app: "super-tracker-joselio",
         version: 1,
-        exportedAt: typeof req.body.exportedAt === "string" ? req.body.exportedAt : new Date().toISOString(),
+        exportedAt: typeof requestBody.exportedAt === "string" ? requestBody.exportedAt : new Date().toISOString(),
         data,
       };
       const serialized = JSON.stringify(backup, null, 2);
