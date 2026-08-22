@@ -86,3 +86,8 @@
 - [x] Adicionar visualização offline de imagens e PDFs já guardados, sem apagar nem migrar destrutivamente os ficheiros existentes.
 - [x] Adicionar testes para abrir ficheiros suportados e manter ficheiros existentes intactos.
 - [ ] Validar visualização responsiva no iPhone e publicar a atualização.
+
+- [ ] Preparar exportação seletiva dos dados locais para uma cópia de segurança, sem apagar o armazenamento do iPhone.
+- [ ] Implementar envio manual para o repositório GitHub privado através de servidor protegido, sem expor o token no cliente.
+- [ ] Adicionar configuração segura do caminho/ficheiro de backup e mensagens claras de sucesso ou erro.
+- [ ] Testar falhas de rede, autorização e preservação local antes de publicar a sincronização.
