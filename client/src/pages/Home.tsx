@@ -325,8 +325,12 @@ export default function Home() {
       const { data: authData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !authData.session) throw new Error("A sessão expirou. Entra novamente antes de fazer o backup.");
       const result = await sendGitHubBackup(githubBackupEndpoint, authData.session.access_token, data);
-      setBackupStatus(`Backup atualizado em ${result.path || "backups/super-tracker-joselio-latest.json"}.`);
-      toast.success("Backup enviado para o GitHub privado.");
+      const backupPath = result.path || "backups/super-tracker-joselio-latest.json";
+      const successMessage = result.pending
+        ? `Pedido de backup enviado. Confirma em alguns segundos: ${backupPath}.`
+        : `Backup atualizado em ${backupPath}.`;
+      setBackupStatus(successMessage);
+      toast.success(result.pending ? "Backup enviado para processamento." : "Backup enviado para o GitHub privado.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Não foi possível enviar o backup.";
       setBackupStatus(message);

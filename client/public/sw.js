@@ -1,4 +1,4 @@
-const CACHE_NAME = "super-tracker-shell-v6";
+const CACHE_NAME = "super-tracker-shell-v7";
 const SHELL_URL = new URL("./", self.registration.scope).href;
 
 async function cacheShell(cache) {

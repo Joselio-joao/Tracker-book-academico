@@ -24,7 +24,17 @@ describe("githubBackup", () => {
     expect(data.notes).toHaveLength(1);
   });
 
-  it("apresenta uma mensagem própria quando a rede falha", async () => {
+  it("usa sendBeacon quando o fetch é rejeitado no Safari standalone", async () => {
+    const sendBeacon = vi.fn().mockReturnValue(true);
+    vi.stubGlobal("navigator", { sendBeacon });
+    const fetcher = vi.fn<typeof fetch>().mockRejectedValue(new TypeError("blocked by standalone browser"));
+    await expect(sendGitHubBackup("https://backup.example/api", "session-token", data, fetcher)).resolves.toMatchObject({ ok: true, pending: true });
+    expect(sendBeacon).toHaveBeenCalledWith("https://backup.example/api", expect.any(Blob));
+  });
+
+  it("apresenta uma mensagem própria quando a rede falha e o beacon também não é aceite", async () => {
+    const sendBeacon = vi.fn().mockReturnValue(false);
+    vi.stubGlobal("navigator", { sendBeacon });
     const fetcher = vi.fn<typeof fetch>().mockRejectedValue(new TypeError("offline"));
     await expect(sendGitHubBackup("https://backup.example/api", "session-token", data, fetcher)).rejects.toThrow("Verifica a ligação à Internet");
   });

@@ -43,8 +43,8 @@ describe("endpoint de backup GitHub", () => {
     await withServer(fetcher, async (baseUrl) => {
       const response = await fetch(`${baseUrl}/api/github/backup`, {
         method: "POST",
-        headers: { Origin: "https://joselio-joao.github.io", Authorization: "Bearer supabase-session", "Content-Type": "application/json" },
-        body: JSON.stringify({ data: { notes: [{ id: "local-1" }] }, exportedAt: "2026-08-23T10:00:00.000Z" }),
+        headers: { Origin: "https://joselio-joao.github.io", "Content-Type": "text/plain" },
+        body: JSON.stringify({ accessToken: "supabase-session", data: { notes: [{ id: "local-1" }] }, exportedAt: "2026-08-23T10:00:00.000Z" }),
       });
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({ ok: true, path: "backups/super-tracker-joselio-latest.json" });

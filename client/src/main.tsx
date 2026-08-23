@@ -9,6 +9,9 @@ if ("serviceWorker" in navigator) {
     const serviceWorkerUrl = new URL("sw.js", document.baseURI);
     navigator.serviceWorker.register(serviceWorkerUrl, { updateViaCache: "none" }).then((registration) => {
       registration.update().catch(() => undefined);
+      window.addEventListener("online", () => {
+        registration.update().catch(() => undefined);
+      });
     }).catch(() => {
       // A aplicação continua a funcionar mesmo quando o navegador não permite o worker.
     });
