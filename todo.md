@@ -92,10 +92,10 @@
 - [x] Adicionar configuração segura do caminho/ficheiro de backup e mensagens claras de sucesso ou erro.
 - [x] Testar falhas de rede, autorização e preservação local antes de publicar a sincronização, com testes unitários e HTTP locais.
 - [ ] Confirmar o primeiro POST real pelo botão do iPhone e verificar a criação/atualização do ficheiro de backup no repositório privado.
-- [ ] Corrigir o erro de contacto do servidor de backup apresentado mesmo com Internet e validar o endpoint público.
-- [ ] Fazer revisão completa do fluxo de backup no iPhone, desde o clique no cliente até à resposta do GitHub.
-- [ ] Verificar publicação do servidor, CORS, secrets, endpoint público, bundle e logs sem expor tokens.
-- [ ] Corrigir estruturalmente a falha encontrada e cobrir o cenário com testes ponta a ponta.
+- [x] Corrigir o erro de contacto do servidor de backup apresentado mesmo com Internet e validar o endpoint público.
+- [x] Fazer revisão completa do fluxo de backup no iPhone, desde o clique no cliente até à resposta do GitHub.
+- [x] Verificar publicação do servidor, CORS, secrets, endpoint público, bundle e logs sem expor tokens.
+- [x] Corrigir estruturalmente a falha encontrada e cobrir o cenário com testes ponta a ponta.
 - [ ] Repetir testes de rede, CORS e autenticação após a correção e orientar novo teste no iPhone.
 - [x] Cobrir falhas de rede e respostas 4xx/5xx no botão, mantendo os dados locais intactos.
 - [x] Cobrir sessão ausente/inválida e e-mail não autorizado no endpoint protegido.
