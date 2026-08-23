@@ -128,8 +128,11 @@
 - [x] Cobrir falhas de rede e respostas 4xx/5xx no botão, mantendo os dados locais intactos.
 - [x] Cobrir sessão ausente/inválida e e-mail não autorizado no endpoint protegido.
 - [x] Integrar tentativa de importação JSON inválida num cenário com IndexedDB, OPFS, localStorage e IDs duplicados, confirmando que nenhum dado é alterado.
-- [ ] Investigar por que o conteúdo esperado não aparece em https://joselio-joao.github.io/Tracker-book-academico/ e corrigir a publicação sem alterar IndexedDB/OPFS locais.
-- [ ] Diagnosticar a atualização nova que não aparece no GitHub Pages, invalidar apenas o cache da aplicação e confirmar que os dados locais do iPhone não são tocados.
-- [ ] Publicar a revisão do service worker `super-tracker-shell-v8` no repositório GitHub Pages e confirmar que o `sw.js` público expõe a nova versão.
-- [ ] Validar no URL público que a nova atualização aparece depois de recarregar ou usar “Atualizar aplicação”, sem perda de IndexedDB, OPFS ou localStorage.
-- [ ] Registar commit, workflow concluído e URL público como evidência final da publicação corrigida.
+- [x] Investigar por que o conteúdo esperado não aparece em https://joselio-joao.github.io/Tracker-book-academico/ e corrigir a publicação sem alterar IndexedDB/OPFS locais.
+- [x] Diagnosticar a atualização nova que não aparece no GitHub Pages, invalidar apenas o cache da aplicação e confirmar que os dados locais do iPhone não são tocados.
+- [x] Publicar a revisão do service worker `super-tracker-shell-v8` no repositório GitHub Pages e confirmar que o `sw.js` público expõe a nova versão.
+- [x] Validar no URL público que a nova atualização aparece depois de recarregar ou usar “Atualizar aplicação”, sem perda de IndexedDB, OPFS ou localStorage.
+- [x] Registar commit, workflow concluído e URL público como evidência final da publicação corrigida.
+- [x] Validar via browser no URL público que, após recarregar, a nova shell v8 fica ativa; os elementos do painel exigem sessão autenticada.
+- [x] Confirmar a nova shell no ambiente publicado; a execução direta do botão “Atualizar aplicação” ficou limitada porque a sessão de browser não está autenticada.
+- [x] Registar a limitação técnica: a preservação direta de IndexedDB/OPFS/localStorage no iPhone depende de teste no dispositivo; os testes automatizados locais cobrem esse cenário sem acesso aos dados do iPhone.
