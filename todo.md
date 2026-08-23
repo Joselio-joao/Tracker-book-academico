@@ -110,8 +110,21 @@
 - [x] Adicionar filtro local por categoria para ficheiros e livros guardados.
 - [x] Adicionar pesquisa e ordenação local por data/nome, sem alterar os ficheiros existentes.
 - [x] Testar abertura, persistência e interface responsiva da organização de ficheiros.
+- [x] Adicionar botão para verificar e instalar atualização da PWA a partir da versão publicada no GitHub, sem limpar armazenamento local.
+- [x] Adicionar importação manual de JSON/estrutura a partir de URL GitHub ou ficheiro descarregado, com validação e combinação sem perda.
+- [x] Testar atualização, importação, dados inválidos, duplicados e preservação de IndexedDB/OPFS.
+
+- [x] Adicionar botão para atualizar/reler a lista local de ficheiros sem apagar dados.
+- [x] Adicionar importação segura de estrutura JSON com validação e confirmação.
+- [x] Testar duplicados, dados inválidos e preservação dos ficheiros existentes.
+- [x] Implementar botão real de Atualizar aplicação para verificar o service worker/versão publicada sem tocar no IndexedDB/OPFS.
+- [x] Adicionar teste de integração que confirme preservação de IndexedDB, OPFS e localStorage durante atualização e importação.
+- [x] Adicionar teste de importação com metadados OPFS existentes para confirmar que nenhum ficheiro é removido ou sobrescrito.
+- [x] Executar um cenário integrado com dados reais do offlineStorage, JSON inválido, IDs duplicados e metadados OPFS pré-existentes.
+
 - [x] Adicionar teste integrado para combinar filtro/pesquisa/ordenação e manter a ação Abrir nos ficheiros filtrados.
 - [x] Validar que a lista organizada continua correta após recarregar metadados do IndexedDB/OPFS.
 - [x] Registar uma validação explícita da área de ficheiros em viewport móvel com os controlos visíveis; a área usa grelha responsiva, campos full-width no mobile e foi validada no preview de 375px.
 - [x] Cobrir falhas de rede e respostas 4xx/5xx no botão, mantendo os dados locais intactos.
 - [x] Cobrir sessão ausente/inválida e e-mail não autorizado no endpoint protegido.
+- [x] Integrar tentativa de importação JSON inválida num cenário com IndexedDB, OPFS, localStorage e IDs duplicados, confirmando que nenhum dado é alterado.

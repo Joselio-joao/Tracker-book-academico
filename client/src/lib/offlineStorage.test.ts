@@ -1,6 +1,8 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { indexedDB } from "fake-indexeddb";
 import { DATA_SAFETY_COPY } from "./dataSafety";
+import { updateApplicationShell } from "./appUpdate";
+import { mergeImportedTrackerData, parseImportedTrackerData } from "./dataTransfer";
 import { organizeStoredFiles } from "./fileOrganization";
 import { clearStoredTrackerData, getLargeFilePreviewKind, loadLargeFileMetadata, loadTrackerData, mergeLegacyTrackerData, readLargeFile, saveLargeFileMetadata, saveTrackerData } from "./offlineStorage";
 
@@ -40,6 +42,41 @@ describe("offlineStorage", () => {
     const saved = { ...fallback, sessions: [{ id: "indexed-1" }], notes: [{ id: "note-1", title: "Revisão", content: "Rever funções", subject: "Matemática", pinned: true }], tutors: [{ id: "tutor-1", name: "Prof. Ana" }], timer: { duration: 50, remaining: 2870, running: true, endsAt: Date.now() + 2870000 } };
     await saveTrackerData(saved);
     await expect(loadTrackerData(fallback)).resolves.toEqual(saved);
+  });
+
+  it("mantém IndexedDB, OPFS e localStorage ao atualizar e importar estrutura", async () => {
+    const originalStorage = (navigator as Navigator & { storage?: unknown }).storage;
+    const originalServiceWorker = (navigator as Navigator & { serviceWorker?: unknown }).serviceWorker;
+    const file = new File(["livro local"], "manual.epub", { type: "application/epub+zip" });
+    const metadata = [{ name: file.name, size: file.size, type: file.type, category: "Livro", updatedAt: 42 }];
+    const directory = { getFileHandle: async () => ({ getFile: async () => file }) };
+    const update = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "storage", { configurable: true, value: { getDirectory: async () => directory } });
+    Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: { getRegistration: vi.fn().mockResolvedValue({ update, installing: null }) } });
+    try {
+      const existing = { ...fallback, notes: [{ id: "local-note", title: "Nota local" }], sessions: [{ id: "local-session", minutes: 45 }] };
+      await saveTrackerData(existing);
+      await saveLargeFileMetadata(metadata);
+      legacyStorage.set("local-only-sentinel", "preservar");
+      const beforeInvalidData = await loadTrackerData(fallback);
+      const beforeInvalidMetadata = await loadLargeFileMetadata();
+      expect(() => parseImportedTrackerData("{ JSON inválido")).toThrow();
+      expect(await loadTrackerData(fallback)).toEqual(beforeInvalidData);
+      expect(await loadLargeFileMetadata()).toEqual(beforeInvalidMetadata);
+      expect(legacyStorage.get("local-only-sentinel")).toBe("preservar");
+      const imported = parseImportedTrackerData(JSON.stringify({ notes: [{ id: "local-note", title: "não substituir" }, { id: "new-note", title: "Nova nota" }] }));
+      const combined = mergeImportedTrackerData(existing, imported);
+      await updateApplicationShell();
+      await saveTrackerData(combined);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect((await loadTrackerData(fallback)).notes).toEqual([{ id: "local-note", title: "Nota local" }, { id: "new-note", title: "Nova nota" }]);
+      expect(await loadLargeFileMetadata()).toEqual(metadata);
+      await expect(readLargeFile(file.name)).resolves.toBe(file);
+      expect(legacyStorage.get("local-only-sentinel")).toBe("preservar");
+    } finally {
+      Object.defineProperty(navigator, "storage", { configurable: true, value: originalStorage });
+      Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: originalServiceWorker });
+    }
   });
 
   it("limpa o registo IndexedDB e o legado", async () => {
