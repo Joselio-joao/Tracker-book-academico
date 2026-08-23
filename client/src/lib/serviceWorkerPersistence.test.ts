@@ -5,6 +5,7 @@ const serviceWorkerSource = readFileSync(new URL("../../public/sw.js", import.me
 
 describe("persistência durante atualizações", () => {
   it("atualiza apenas recursos da aplicação", () => {
+    expect(serviceWorkerSource).toContain('const CACHE_NAME = "super-tracker-shell-v8"');
     expect(serviceWorkerSource).toContain("caches.open(CACHE_NAME)");
     expect(serviceWorkerSource).toContain("cache.put");
     expect(serviceWorkerSource).toContain("self.clients.claim");

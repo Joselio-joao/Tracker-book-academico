@@ -1,4 +1,5 @@
-const CACHE_NAME = "super-tracker-shell";
+// Incrementa apenas quando o shell da aplicação muda. Nunca apagar caches aqui: os dados vivem fora do Cache API.
+const CACHE_NAME = "super-tracker-shell-v8";
 const SHELL_URL = new URL("./", self.registration.scope).href;
 
 async function cacheShell(cache) {
