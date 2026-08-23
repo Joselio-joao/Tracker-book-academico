@@ -97,5 +97,9 @@
 - [x] Verificar publicação do servidor, CORS, secrets, endpoint público, bundle e logs sem expor tokens.
 - [x] Corrigir estruturalmente a falha encontrada e cobrir o cenário com testes ponta a ponta.
 - [ ] Repetir testes de rede, CORS e autenticação após a correção e orientar novo teste no iPhone.
+- [x] Adicionar aviso visível sobre onde os dados ficam guardados, quando se mantêm e quando podem ser perdidos.
+- [ ] Testar a pequena atualização sem apagar nem modificar os dados locais existentes.
+- [x] Adicionar regressão que confirme que o aviso de persistência não inicia escrita ou limpeza no IndexedDB/OPFS.
+- [ ] Validar que os dados locais existentes continuam a carregar depois da atualização do aviso.
 - [x] Cobrir falhas de rede e respostas 4xx/5xx no botão, mantendo os dados locais intactos.
 - [x] Cobrir sessão ausente/inválida e e-mail não autorizado no endpoint protegido.
