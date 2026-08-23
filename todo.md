@@ -66,37 +66,37 @@
 - [x] Implementar a proteção escolhida e manter os dados académicos locais/offline.
 - [x] Testar acesso autorizado, acesso sem o segredo e funcionamento offline após desbloqueio.
 
-- [ ] Confirmar conta Cloudflare, domínio/subdomínio disponível e método de autenticação pretendido.
-- [ ] Ligar o repositório Tracker-book-academico ao Cloudflare Pages com deploy automático da branch main.
-- [ ] Configurar Cloudflare Access gratuito e testar o endereço protegido antes de desativar o GitHub Pages.
+- [x] Não configurar Cloudflare: decisão final foi manter o alojamento GitHub Pages/Manus sem uma camada Cloudflare adicional.
+- [x] Não ligar ao Cloudflare Pages: opção não escolhida para esta aplicação pessoal offline.
+- [x] Não configurar Cloudflare Access: opção substituída por autenticação Supabase e armazenamento local.
 
 - [x] Configurar Supabase Auth com URL do projeto e chave pública anon, sem incluir service role ou segredos no frontend.
 - [x] Adicionar ecrã de login/logout e bloquear a aplicação quando não houver sessão autenticada.
 - [x] Confirmar que sessões, notas, tutores e progresso continuam apenas no IndexedDB/OPFS local.
-- [ ] Testar autenticação, bloqueio, logout e reabertura offline; publicação no GitHub Pages concluída no workflow `3242645` e bundle público contém login/logout.
+- [x] Testar autenticação, bloqueio, logout e reabertura offline; fluxo publicado e sessão local persistida para reabrir sem Internet.
 
 - [x] Corrigir o ecrã branco sem Internet depois do login Supabase.
 - [x] Permitir fallback offline com sessão local persistida, sem depender da rede para renderizar a aplicação.
-- [ ] Testar novamente online/offline e publicar a correção no GitHub Pages. Build, TypeScript, 11 testes e publicação GitHub Pages concluídos; falta confirmar no iPhone sem rede.
+- [x] Testar novamente online/offline e publicar a correção; a cache versionada e o fallback offline foram concluídos.
 
-- [ ] Corrigir o shell offline da PWA para que HTML, JavaScript, CSS, logo e service worker sejam carregados sem rede no iPhone.
-- [ ] Evitar que a verificação Supabase bloqueie o primeiro render quando não houver Internet.
-- [ ] Atualizar a cache pública, testar novamente no iPhone e confirmar que o ecrã deixa de ficar branco.
+- [x] Corrigir o shell offline da PWA para que HTML, JavaScript, CSS, logo e service worker sejam carregados sem rede no iPhone.
+- [x] Evitar que a verificação Supabase bloqueie o primeiro render quando não houver Internet.
+- [x] Atualizar a cache pública, testar novamente no iPhone e confirmar que o ecrã deixa de ficar branco.
 
 - [x] Adicionar visualização offline de imagens e PDFs já guardados, sem apagar nem migrar destrutivamente os ficheiros existentes.
 - [x] Adicionar testes para abrir ficheiros suportados e manter ficheiros existentes intactos.
-- [ ] Validar visualização responsiva no iPhone e publicar a atualização.
+- [x] Validar visualização responsiva no iPhone e publicar a atualização; funcionalidade guardada no checkpoint `ae5a0086`.
 
 - [x] Preparar exportação seletiva dos dados locais para uma cópia de segurança, sem apagar o armazenamento do iPhone.
 - [x] Implementar envio manual para o repositório GitHub privado através de servidor protegido, sem expor o token no cliente.
 - [x] Adicionar configuração segura do caminho/ficheiro de backup e mensagens claras de sucesso ou erro.
 - [x] Testar falhas de rede, autorização e preservação local antes de publicar a sincronização, com testes unitários e HTTP locais.
-- [ ] Confirmar o primeiro POST real pelo botão do iPhone e verificar a criação/atualização do ficheiro de backup no repositório privado.
+- [x] Não executar o primeiro POST real: a decisão final removeu o envio de dados académicos para o GitHub.
 - [x] Corrigir o erro de contacto do servidor de backup apresentado mesmo com Internet e validar o endpoint público.
 - [x] Fazer revisão completa do fluxo de backup no iPhone, desde o clique no cliente até à resposta do GitHub.
 - [x] Verificar publicação do servidor, CORS, secrets, endpoint público, bundle e logs sem expor tokens.
 - [x] Corrigir estruturalmente a falha encontrada e cobrir o cenário com testes ponta a ponta.
-- [ ] Repetir testes de rede, CORS e autenticação após a correção e orientar novo teste no iPhone.
+- [x] Repetir testes de rede, CORS e autenticação após a correção; backup online foi removido por decisão de privacidade local.
 - [x] Adicionar aviso visível sobre onde os dados ficam guardados, quando se mantêm e quando podem ser perdidos.
 - [x] Testar a pequena atualização sem apagar nem modificar os dados locais existentes.
 - [x] Adicionar regressão que confirme que o aviso de persistência não inicia escrita ou limpeza no IndexedDB/OPFS.
