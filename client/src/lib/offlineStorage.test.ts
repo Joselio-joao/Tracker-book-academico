@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { indexedDB } from "fake-indexeddb";
+import { DATA_SAFETY_COPY } from "./dataSafety";
 import { clearStoredTrackerData, getLargeFilePreviewKind, loadLargeFileMetadata, loadTrackerData, mergeLegacyTrackerData, readLargeFile, saveLargeFileMetadata, saveTrackerData } from "./offlineStorage";
 
 const legacyStorage = new Map<string, string>();
@@ -44,6 +45,30 @@ describe("offlineStorage", () => {
     await saveTrackerData({ ...fallback, sessions: [{ id: "to-delete" }] });
     await clearStoredTrackerData();
     await expect(loadTrackerData(fallback)).resolves.toEqual(fallback);
+  });
+
+  it("preserva dados existentes quando a mensagem de persistência é carregada", async () => {
+    const originalStorage = (navigator as Navigator & { storage?: unknown }).storage;
+    const metadata = [{ name: "plano.pdf", size: 12, type: "application/pdf", updatedAt: 10 }];
+    const directory = { getFileHandle: async () => ({ getFile: async () => new File(["pdf"], "plano.pdf", { type: "application/pdf" }) }) };
+    Object.defineProperty(navigator, "storage", { configurable: true, value: { getDirectory: async () => directory } });
+    const existing = {
+      ...fallback,
+      sessions: [{ id: "existing-session", date: "2026-08-23", subject: "Matemática", minutes: 45, topic: "Funções", quality: 4 }],
+      notes: [{ id: "existing-note", title: "Revisão", content: "Derivadas", subject: "Matemática", pinned: true }],
+      tutors: [{ id: "existing-tutor", name: "Prof. Ana", role: "Tutora", phone: "+244900000000", email: "", subject: "Matemática", notes: "" }],
+    };
+    try {
+      await saveTrackerData(existing);
+      await saveLargeFileMetadata(metadata);
+      const beforeData = await loadTrackerData(fallback);
+      const beforeMetadata = await loadLargeFileMetadata();
+      expect(DATA_SAFETY_COPY.title).toBe("Os teus dados vão manter-se?");
+      await expect(loadTrackerData(fallback)).resolves.toEqual(beforeData);
+      await expect(loadLargeFileMetadata()).resolves.toEqual(beforeMetadata);
+    } finally {
+      Object.defineProperty(navigator, "storage", { configurable: true, value: originalStorage });
+    }
   });
 
   it("ignora uma cópia legada inválida com segurança", () => {

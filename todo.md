@@ -98,8 +98,11 @@
 - [x] Corrigir estruturalmente a falha encontrada e cobrir o cenário com testes ponta a ponta.
 - [ ] Repetir testes de rede, CORS e autenticação após a correção e orientar novo teste no iPhone.
 - [x] Adicionar aviso visível sobre onde os dados ficam guardados, quando se mantêm e quando podem ser perdidos.
-- [ ] Testar a pequena atualização sem apagar nem modificar os dados locais existentes.
+- [x] Testar a pequena atualização sem apagar nem modificar os dados locais existentes.
 - [x] Adicionar regressão que confirme que o aviso de persistência não inicia escrita ou limpeza no IndexedDB/OPFS.
-- [ ] Validar que os dados locais existentes continuam a carregar depois da atualização do aviso.
+- [x] Validar que os dados locais existentes continuam a carregar depois da atualização do aviso, coberto pelos testes de carregamento IndexedDB e regressão da área estática.
+- [x] Remover do aplicativo o envio de novos dados académicos para o GitHub sem apagar os dados locais.
+- [x] Atualizar a interface para indicar que o armazenamento é exclusivamente no telefone.
+- [x] Testar que a atualização não altera IndexedDB/OPFS e que não existe ação de sincronização online.
 - [x] Cobrir falhas de rede e respostas 4xx/5xx no botão, mantendo os dados locais intactos.
 - [x] Cobrir sessão ausente/inválida e e-mail não autorizado no endpoint protegido.
