@@ -136,4 +136,4 @@
 - [x] Validar via browser no URL público que, após recarregar, a nova shell v8 fica ativa; os elementos do painel exigem sessão autenticada.
 - [x] Confirmar a nova shell no ambiente publicado; a execução direta do botão “Atualizar aplicação” ficou limitada porque a sessão de browser não está autenticada.
 - [x] Registar a limitação técnica: a preservação direta de IndexedDB/OPFS/localStorage no iPhone depende de teste no dispositivo; os testes automatizados locais cobrem esse cenário sem acesso aos dados do iPhone.
-- [ ] Adicionar em Mais um cartão Portfólio com botão clicável para https://jos-lio-portofolio.pages.dev/ e validar a abertura externa em nova aba.
+- [x] Adicionar em Mais um cartão Portfólio com botão clicável para https://jos-lio-portofolio.pages.dev/ e validar a abertura externa em nova aba.
