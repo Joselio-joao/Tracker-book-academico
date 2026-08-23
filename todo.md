@@ -128,3 +128,4 @@
 - [x] Cobrir falhas de rede e respostas 4xx/5xx no botão, mantendo os dados locais intactos.
 - [x] Cobrir sessão ausente/inválida e e-mail não autorizado no endpoint protegido.
 - [x] Integrar tentativa de importação JSON inválida num cenário com IndexedDB, OPFS, localStorage e IDs duplicados, confirmando que nenhum dado é alterado.
+- [ ] Investigar por que o conteúdo esperado não aparece em https://joselio-joao.github.io/Tracker-book-academico/ e corrigir a publicação sem alterar IndexedDB/OPFS locais.
