@@ -72,6 +72,10 @@ describe("área OPFS organizada na interface", () => {
     renderMoreView();
     await waitFor(() => expect(screen.getByText("manual.epub")).toBeTruthy());
     expect(screen.getByRole("button", { name: "Atualizar" })).toBeTruthy();
+    const portfolioLink = screen.getByRole("link", { name: "Abrir Portfólio numa nova aba" });
+    expect(portfolioLink.getAttribute("href")).toBe("https://jos-lio-portofolio.pages.dev/");
+    expect(portfolioLink.getAttribute("target")).toBe("_blank");
+    expect(portfolioLink.getAttribute("rel")).toContain("noopener");
     fireEvent.click(screen.getByRole("button", { name: "Atualizar aplicação" }));
     expect(onUpdateApp).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("button", { name: "Importar ficheiro JSON" })).toBeTruthy();
