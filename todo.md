@@ -104,5 +104,8 @@
 - [x] Remover do aplicativo o envio de novos dados académicos para o GitHub sem apagar os dados locais.
 - [x] Atualizar a interface para indicar que o armazenamento é exclusivamente no telefone.
 - [x] Testar que a atualização não altera IndexedDB/OPFS e que não existe ação de sincronização online.
+- [x] Simplificar a estratégia de atualização para nunca limpar IndexedDB, OPFS ou localStorage.
+- [x] Adicionar testes de regressão para service worker, migração e preservação dos dados durante atualização, incluindo simulação funcional de install/activate com dados pré-existentes.
+- [ ] Publicar a versão simplificada e orientar a atualização sem remover o ícone do iPhone.
 - [x] Cobrir falhas de rede e respostas 4xx/5xx no botão, mantendo os dados locais intactos.
 - [x] Cobrir sessão ausente/inválida e e-mail não autorizado no endpoint protegido.

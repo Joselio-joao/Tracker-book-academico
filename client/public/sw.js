@@ -1,4 +1,4 @@
-const CACHE_NAME = "super-tracker-shell-v7";
+const CACHE_NAME = "super-tracker-shell";
 const SHELL_URL = new URL("./", self.registration.scope).href;
 
 async function cacheShell(cache) {
@@ -26,10 +26,8 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim()),
-  );
+  // A atualização do código nunca limpa dados ou caches existentes.
+  event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener("fetch", (event) => {
