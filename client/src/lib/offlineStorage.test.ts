@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { indexedDB } from "fake-indexeddb";
 import { DATA_SAFETY_COPY } from "./dataSafety";
+import { organizeStoredFiles } from "./fileOrganization";
 import { clearStoredTrackerData, getLargeFilePreviewKind, loadLargeFileMetadata, loadTrackerData, mergeLegacyTrackerData, readLargeFile, saveLargeFileMetadata, saveTrackerData } from "./offlineStorage";
 
 const legacyStorage = new Map<string, string>();
@@ -98,6 +99,29 @@ describe("offlineStorage", () => {
       await expect(readLargeFile("foto.png")).resolves.toBe(savedImage);
       await expect(savedPdf.text()).resolves.toBe("conteúdo-pdf");
       await expect(savedImage.text()).resolves.toBe("conteúdo-imagem");
+      await expect(loadLargeFileMetadata()).resolves.toEqual(metadata);
+    } finally {
+      Object.defineProperty(navigator, "storage", { configurable: true, value: originalStorage });
+    }
+  });
+
+  it("mantém a organização após recarregar metadados e abre o item filtrado", async () => {
+    const originalStorage = (navigator as Navigator & { storage?: unknown }).storage;
+    const savedBook = new File(["livro"], "manual.epub", { type: "application/epub+zip" });
+    const savedPdf = new File(["pdf"], "plano.pdf", { type: "application/pdf" });
+    const files = new Map([["manual.epub", savedBook], ["plano.pdf", savedPdf]]);
+    const metadata = [
+      { name: "manual.epub", size: savedBook.size, type: savedBook.type, category: "Livro", updatedAt: 20 },
+      { name: "plano.pdf", size: savedPdf.size, type: savedPdf.type, category: "PDF", updatedAt: 10 },
+    ];
+    const directory = { getFileHandle: async (name: string) => ({ getFile: async () => files.get(name) }) };
+    Object.defineProperty(navigator, "storage", { configurable: true, value: { getDirectory: async () => directory } });
+    try {
+      await saveLargeFileMetadata(metadata);
+      const reloaded = await loadLargeFileMetadata();
+      const visible = organizeStoredFiles(reloaded, "Livro", "newest", "manual");
+      expect(visible.map((file) => file.name)).toEqual(["manual.epub"]);
+      await expect(readLargeFile(visible[0].name)).resolves.toBe(savedBook);
       await expect(loadLargeFileMetadata()).resolves.toEqual(metadata);
     } finally {
       Object.defineProperty(navigator, "storage", { configurable: true, value: originalStorage });

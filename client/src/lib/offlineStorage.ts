@@ -165,7 +165,7 @@ export function getLargeFilePreviewKind(type: string, fileName: string): Preview
   return "other";
 }
 
-export type StoredFileMetadata = { name: string; size: number; type: string; updatedAt: number };
+export type StoredFileMetadata = { name: string; size: number; type: string; updatedAt: number; category?: string };
 
 export async function loadLargeFileMetadata(): Promise<StoredFileMetadata[]> {
   try {

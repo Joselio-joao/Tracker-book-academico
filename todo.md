@@ -106,6 +106,12 @@
 - [x] Testar que a atualização não altera IndexedDB/OPFS e que não existe ação de sincronização online.
 - [x] Simplificar a estratégia de atualização para nunca limpar IndexedDB, OPFS ou localStorage.
 - [x] Adicionar testes de regressão para service worker, migração e preservação dos dados durante atualização, incluindo simulação funcional de install/activate com dados pré-existentes.
-- [ ] Publicar a versão simplificada e orientar a atualização sem remover o ícone do iPhone.
+- [x] Publicar a versão simplificada e orientar a atualização sem remover o ícone do iPhone.
+- [x] Adicionar filtro local por categoria para ficheiros e livros guardados.
+- [x] Adicionar pesquisa e ordenação local por data/nome, sem alterar os ficheiros existentes.
+- [x] Testar abertura, persistência e interface responsiva da organização de ficheiros.
+- [x] Adicionar teste integrado para combinar filtro/pesquisa/ordenação e manter a ação Abrir nos ficheiros filtrados.
+- [x] Validar que a lista organizada continua correta após recarregar metadados do IndexedDB/OPFS.
+- [x] Registar uma validação explícita da área de ficheiros em viewport móvel com os controlos visíveis; a área usa grelha responsiva, campos full-width no mobile e foi validada no preview de 375px.
 - [x] Cobrir falhas de rede e respostas 4xx/5xx no botão, mantendo os dados locais intactos.
 - [x] Cobrir sessão ausente/inválida e e-mail não autorizado no endpoint protegido.
