@@ -18,6 +18,7 @@ vi.mock("./offlineStorage", () => ({
 
 const onImportGitHub = vi.fn();
 const onUpdateApp = vi.fn();
+const onCreateEncryptedBackup = vi.fn();
 
 const storedFiles = [
   { name: "manual.epub", size: 300, type: "application/epub+zip", category: "Livro", updatedAt: 3000 },
@@ -52,6 +53,9 @@ function renderMoreView() {
       setImportUrl={vi.fn()}
       importFileRef={{ current: null }}
       storageEstimate={{ usage: 0, quota: 0, usageLabel: "0 B", quotaLabel: "indisponível" }}
+      onCreateEncryptedBackup={onCreateEncryptedBackup}
+      onRestoreEncryptedBackup={vi.fn()}
+      backupFileRef={{ current: null }}
     />,
   );
 }
@@ -72,6 +76,9 @@ describe("área OPFS organizada na interface", () => {
     renderMoreView();
     await waitFor(() => expect(screen.getByText("manual.epub")).toBeTruthy());
     expect(screen.getByRole("button", { name: "Atualizar" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Criar cópia cifrada" }));
+    expect(onCreateEncryptedBackup).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "Restaurar cópia" })).toBeTruthy();
     const portfolioLink = screen.getByRole("link", { name: "Abrir Portfólio numa nova aba" });
     expect(portfolioLink.getAttribute("href")).toBe("https://jos-lio-portofolio.pages.dev/");
     expect(portfolioLink.getAttribute("target")).toBe("_blank");

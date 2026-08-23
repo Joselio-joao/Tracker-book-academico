@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { indexedDB } from "fake-indexeddb";
+import { encryptBackup, decryptBackup } from "./backupCrypto";
 import { DATA_SAFETY_COPY } from "./dataSafety";
 import { updateApplicationShell } from "./appUpdate";
 import { mergeImportedTrackerData, parseImportedTrackerData } from "./dataTransfer";
@@ -76,6 +77,37 @@ describe("offlineStorage", () => {
     } finally {
       Object.defineProperty(navigator, "storage", { configurable: true, value: originalStorage });
       Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: originalServiceWorker });
+    }
+  });
+
+  it("restaura backup cifrado sem sobrescrever IndexedDB, OPFS ou localStorage", async () => {
+    const originalStorage = (navigator as Navigator & { storage?: unknown }).storage;
+    const localFile = new File(["ficheiro local"], "manual.epub", { type: "application/epub+zip" });
+    const localMetadata = [{ name: localFile.name, size: localFile.size, type: localFile.type, category: "Livro", updatedAt: 10 }];
+    const backupMetadata = [{ name: "novo.pdf", size: 8, type: "application/pdf", category: "PDF", updatedAt: 20 }];
+    const directory = { getFileHandle: async (name: string) => ({ getFile: async () => name === localFile.name ? localFile : null }) };
+    Object.defineProperty(navigator, "storage", { configurable: true, value: { getDirectory: async () => directory } });
+    const existing = { ...fallback, notes: [{ id: "existing-note", title: "Nota local", content: "não substituir" }], sessions: [{ id: "existing-session", minutes: 45 }] };
+    const backupData = { ...fallback, notes: [{ id: "existing-note", title: "versão da cópia", content: "não deve substituir" }, { id: "new-note", title: "Nota nova", content: "restaurar" }] };
+    try {
+      await saveTrackerData(existing);
+      await saveLargeFileMetadata(localMetadata);
+      legacyStorage.set("local-only-sentinel", "preservar");
+      const encrypted = await encryptBackup(JSON.stringify({ format: "super-tracker-backup", version: 1, data: backupData, files: backupMetadata }), "palavra-secreta-forte");
+      const restored = JSON.parse(await decryptBackup(encrypted, "palavra-secreta-forte")) as { data: typeof backupData; files: typeof backupMetadata };
+      const imported = parseImportedTrackerData(JSON.stringify(restored.data));
+      const combined = mergeImportedTrackerData(existing, imported);
+      const currentMetadata = await loadLargeFileMetadata();
+      const metadataByName = new Map(currentMetadata.map((item) => [item.name, item]));
+      restored.files.forEach((item) => { if (!metadataByName.has(item.name)) metadataByName.set(item.name, item); });
+      await saveLargeFileMetadata(Array.from(metadataByName.values()));
+      await saveTrackerData(combined);
+      expect((await loadTrackerData(fallback)).notes).toEqual([{ id: "existing-note", title: "Nota local", content: "não substituir" }, { id: "new-note", title: "Nota nova", content: "restaurar" }]);
+      expect(await loadLargeFileMetadata()).toEqual([...localMetadata, ...backupMetadata]);
+      await expect(readLargeFile(localFile.name)).resolves.toBe(localFile);
+      expect(legacyStorage.get("local-only-sentinel")).toBe("preservar");
+    } finally {
+      Object.defineProperty(navigator, "storage", { configurable: true, value: originalStorage });
     }
   });
 

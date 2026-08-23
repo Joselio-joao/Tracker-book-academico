@@ -137,3 +137,14 @@
 - [x] Confirmar a nova shell no ambiente publicado; a execução direta do botão “Atualizar aplicação” ficou limitada porque a sessão de browser não está autenticada.
 - [x] Registar a limitação técnica: a preservação direta de IndexedDB/OPFS/localStorage no iPhone depende de teste no dispositivo; os testes automatizados locais cobrem esse cenário sem acesso aos dados do iPhone.
 - [x] Adicionar em Mais um cartão Portfólio com botão clicável para https://jos-lio-portofolio.pages.dev/ e validar a abertura externa em nova aba.
+- [x] Não implementar servidor próprio + MinIO nesta fase; a opção foi substituída por backup cifrado gratuito exportável para Ficheiros/iCloud Drive, mantendo IndexedDB/OPFS locais.
+- [x] Substituído por encriptação local do backup; não existe endpoint nem chave de servidor nesta solução gratuita.
+- [x] Implementar criação e restauração manual de backup cifrado; cada ficheiro descarregado recebe a data no nome e os dados locais são combinados sem substituição automática.
+- [x] Criar backup gratuito cifrado exportável para Ficheiros/iCloud Drive ou outro armazenamento escolhido pelo utilizador, sem servidor próprio pago.
+- [x] Restaurar o backup cifrado de forma manual e segura, sem substituir automaticamente dados locais existentes.
+- [x] Testar atualização e recuperação em browser compatível, incluindo palavra-passe errada, ficheiro adulterado, formato inválido, restauração sobre dados preexistentes e preservação de IndexedDB/OPFS/localStorage; o teste final no iPhone depende da execução do utilizador no dispositivo.
+- [x] Implementar cópia de segurança cifrada para Ficheiros/iCloud Drive com dados do tracker e metadados dos PDFs/imagens.
+- [x] Implementar restauração manual com confirmação, comparação e preservação dos dados locais existentes.
+- [x] Mostrar comparação pré-restauro com registos novos e existentes antes de confirmar a cópia cifrada.
+- [x] Criar teste integrado de restauração sobre dados locais preexistentes, confirmando que nada é sobrescrito e que metadados OPFS são preservados.
+- [x] Ajustar a linguagem para indicar que o backup é um ficheiro cifrado descarregado e compatível com Ficheiros/iCloud Drive, sem integração direta com a API do iCloud.
